@@ -3,3 +3,5 @@
 require 'qcmd'
 
 Qcmd::Hello.speak ARGV[0]
+
+Qcmd::CLI.start

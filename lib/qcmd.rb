@@ -2,11 +2,9 @@ require "qcmd/version"
 
 module Qcmd
   # Your code goes here...
-  autoload :Hello, 'qcmd/hello'
+  autoload :CLI, 'qcmd/cli'
 
   class << self
-    def hello
-      puts 'hello world'
-    end
+    # class methods on Qcmd go here
   end
 end
