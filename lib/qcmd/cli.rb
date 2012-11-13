@@ -1,26 +1,29 @@
-require 'highline/import'
+require 'qcmd/server'
+
+require 'readline'
+
+require 'osc-ruby'
+require 'osc-ruby/em_server'
 
 module Qcmd
   class CLI
-    attr_accessor :server, :client
+    attr_accessor :server
 
     def initialize
       # start local listening port
-      self.server = Server.new 53001
+      self.server = Qcmd::Server.new :send => ['localhost', 53000], :receive => 53001
 
-      server.on :reply {|message|
-        say "<%= color('#{message.ip_address}:#{message.ip_port}', :green) %> #{message.address} <%= color('#{}', #{message.to_a.inspect}) %>"
-      }
-
-      self.client = OSC::Client.new 'localhost', 53000
+      start
     end
 
     def start
-      while true
-        message     = ask '> '
-        args        = message.split
-        address     = args.shift
-        osc_message = OSC::Message.new "/#{ address }", *args
+      server.run
+
+      loop do
+        message = Readline.readline('q> ', true)
+        args    = message.strip.split
+        command = args.shift
+        server.send(command, *args)
       end
     end
   end
