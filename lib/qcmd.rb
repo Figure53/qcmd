@@ -6,11 +6,30 @@ module Qcmd
   autoload :Handler, 'qcmd/handler'
   autoload :Server, 'qcmd/server'
   autoload :CLI, 'qcmd/cli'
+  autoload :VERSION, 'qcmd/version'
 
   class << self
-    # class methods on Qcmd go here
-    def debug *args
-      puts(*args)
+    attr_accessor :log_level
+    attr_accessor :debug_mode
+
+    def verbose!
+      self.log_level = :debug
+    end
+
+    def quiet!
+      self.log_level = :warning
+    end
+
+    def debug?
+      !!debug_mode
+    end
+
+    def debug message
+      log(message) if log_level == :debug
+    end
+
+    def log message
+      puts message
     end
   end
 end
