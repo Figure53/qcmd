@@ -9,7 +9,7 @@ module Qcmd
   class CLI
     attr_accessor :server
 
-    def launch options={}
+    def self.launch options={}
       new options
     end
 
