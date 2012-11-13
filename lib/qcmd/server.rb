@@ -35,13 +35,13 @@ module Qcmd
           json = JSON.parse message.to_a.first
           handler.handle json['address'], json['data']
         rescue => ex
-          puts "(ERROR: #{ ex.message })"
+          Qcmd.debug "(ERROR: #{ ex.message })"
         end
       end
 
-      puts '(starting server)'
+      Qcmd.debug '(starting server)'
       Thread.new do
-        puts '(server is up)'
+        Qcmd.debug '(server is up)'
         receive_channel.run
       end
     end

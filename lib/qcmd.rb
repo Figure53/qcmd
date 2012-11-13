@@ -28,8 +28,13 @@ module Qcmd
       log(message) if log_level == :debug
     end
 
-    def log message
-      puts message
+    def log *message
+      puts(*message)
+    end
+
+    # always output
+    def print *args
+      log(*args)
     end
   end
 end
