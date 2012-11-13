@@ -6,4 +6,9 @@ describe Qcmd::CLI do
     Qcmd::CLI.any_instance.should_receive(:start)
     Qcmd::CLI.new
   end
+
+  it 'should respond to launch' do
+    Qcmd::CLI.should_receive :new
+    Qcmd::CLI.launch
+  end
 end
