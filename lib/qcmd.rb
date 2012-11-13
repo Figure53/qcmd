@@ -6,6 +6,9 @@ module Qcmd
   autoload :Handler, 'qcmd/handler'
   autoload :Server, 'qcmd/server'
   autoload :CLI, 'qcmd/cli'
+  autoload :Machine, 'qcmd/machine'
+  autoload :Network, 'qcmd/network'
+
   autoload :VERSION, 'qcmd/version'
 
   class << self
