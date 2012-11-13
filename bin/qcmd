@@ -3,19 +3,22 @@
 require 'qcmd'
 require 'trollop'
 
-global_opts = Trollop::options do
+opts = Trollop::options do
   version "qcmd #{ Qcmd::VERSION } (c) 2012 Figure 53, Baltimore, MD."
   opt :verbose, 'Use verbose mode', :default => false
   opt :debug, "Show full debug output, don't make changes to workspaces", :default => false
 end
 
-if global_opts[:verbose]
+if opts[:verbose]
   Qcmd.log_level = :debug
 end
 
-if global_opts[:debug]
+if opts[:debug]
   Qcmd.log_level = :debug
   Qcmd.debug_mode = true
 end
 
-Qcmd::CLI.new
+# browse local network and check for qlab + qlab workspaces
+Qcmd::Network.browse_and_display
+
+Qcmd::CLI.launch opts

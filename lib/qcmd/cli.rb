@@ -9,7 +9,11 @@ module Qcmd
   class CLI
     attr_accessor :server
 
-    def initialize
+    def launch options={}
+      new options
+    end
+
+    def initialize options={}
       # start local listening port
       self.server = Qcmd::Server.new :send => ['localhost', 53000], :receive => 53001
 
