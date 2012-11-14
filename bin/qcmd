@@ -19,6 +19,9 @@ if opts[:debug]
 end
 
 # browse local network and check for qlab + qlab workspaces
+
+Qcmd.ascii_qlab
+
 Qcmd::Network.browse_and_display
 
 Qcmd::CLI.launch opts

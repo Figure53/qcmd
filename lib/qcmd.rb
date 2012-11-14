@@ -1,19 +1,24 @@
-require "qcmd/version"
-
+require 'qcmd/version'
+require 'qcmd/input_completer'
 
 module Qcmd
   # Your code goes here...
   autoload :Handler, 'qcmd/handler'
   autoload :Server, 'qcmd/server'
+  autoload :Context, 'qcmd/context'
   autoload :CLI, 'qcmd/cli'
   autoload :Machine, 'qcmd/machine'
   autoload :Network, 'qcmd/network'
-
+  autoload :QLab, 'qcmd/qlab'
+  autoload :Plaintext, 'qcmd/plaintext'
   autoload :VERSION, 'qcmd/version'
 
   class << self
+    include Qcmd::Plaintext
+
     attr_accessor :log_level
     attr_accessor :debug_mode
+    attr_accessor :context
 
     def verbose!
       self.log_level = :debug
@@ -31,13 +36,8 @@ module Qcmd
       log(message) if log_level == :debug
     end
 
-    def log *message
-      puts(*message)
-    end
-
-    # always output
-    def print *args
-      log(*args)
+    def connected?
+      !!context && !!context.machine && !context.machine.nil?
     end
   end
 end
