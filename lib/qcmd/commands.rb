@@ -7,6 +7,10 @@ module Qcmd
     # name, response
 
     class << self
+      def wait?(command)
+        %w(cues workspaces name).include?(command)
+      end
+
       def root
         @root ||= cmap [
           ['connect', true]

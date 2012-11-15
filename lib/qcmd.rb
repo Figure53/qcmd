@@ -1,6 +1,8 @@
 require 'qcmd/version'
 require 'qcmd/input_completer'
 
+require 'qcmd/core_ext/array'
+
 module Qcmd
   # Your code goes here...
   autoload :Handler, 'qcmd/handler'

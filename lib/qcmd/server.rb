@@ -7,9 +7,11 @@ module Qcmd
   class TimeoutError < Exception; end
 
   class Server
-    attr_accessor :receive_channel, :receive_port, :send_channel, :machine
+    attr_accessor :receive_channel, :receive_thread, :receive_port, :send_channel, :machine
 
-    def initialize options={}
+    def initialize *args
+      options = args.extract_options!
+
       self.receive_port = options[:receive]
       connect_to_client
 
@@ -38,9 +40,10 @@ module Qcmd
       end
     end
 
+    # initialize
     def listen
-      if self.receive_channel
-        self.receive_channel.stop
+      if receive_channel && receive_thread && receive_thread.alive?
+        stop
       end
 
       self.receive_channel = OSC::EMServer.new(self.receive_port)
@@ -84,6 +87,8 @@ module Qcmd
     end
 
     def send_command command, *args
+      options = args.extract_options!
+
       if %r[^/] =~ command
         address = command
       else
@@ -97,12 +102,12 @@ module Qcmd
     end
 
     def stop
-      receive_channel.stop
+      Thread.kill(receive_thread) if receive_thread.alive?
     end
 
     def run
       Qcmd.debug '(starting server)'
-      Thread.new do
+      self.receive_thread = Thread.new do
         Qcmd.debug '(server is up)'
         receive_channel.run
       end

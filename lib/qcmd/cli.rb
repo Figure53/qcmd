@@ -17,7 +17,9 @@ module Qcmd
 
     def initialize options={}
       # start local listening port
-      reset!
+      Qcmd.context = Qcmd::Context.new
+
+      self.prompt = '> '
 
       start
 
@@ -43,14 +45,11 @@ module Qcmd
       if server.nil?
         # set client connection and start listening port
         self.server = Qcmd::Server.new :receive => 53001
-        server.run
       else
         # change client connection
-        server.connect_to_client machine
-
-        # reboot server?
-        server.restart
+        server.connect_to_client
       end
+      server.run
 
       server.load_workspaces
 
@@ -68,17 +67,19 @@ module Qcmd
       server.connect_to_workspace workspace
     end
 
-    def reset!
-      Qcmd.context = Qcmd::Context.new
+    def reset
+      Qcmd.context.reset
+      server.stop
       self.prompt = "> "
     end
 
     def start
       loop do
+        # blocks the whole Ruby VM
         message = Readline.readline(prompt, true)
 
         if message.nil? || message.size == 0
-          puts "got: #{ message.inspect }"
+          Qcmd.debug "(got: #{ message.inspect })"
           next
         end
 
@@ -87,7 +88,7 @@ module Qcmd
 
         case command
         when 'exit'
-          puts 'exiting...'
+          print 'exiting...'
           exit 0
         when 'connect'
           Qcmd.debug "(connect command received args: #{ args.inspect })"
@@ -99,11 +100,10 @@ module Qcmd
             print "connecting to machine: #{machine_name}"
             connect machine, passcode
           else
-            print "sorry, that machine could not be found"
+            print 'sorry, that machine could not be found'
           end
         when 'disconnect'
-          reset!
-
+          reset
           Qcmd::Network.browse_and_display
         when 'use'
           Qcmd.debug "(use command received args: #{ args.inspect })"
