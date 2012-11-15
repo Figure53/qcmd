@@ -56,14 +56,17 @@ module Qcmd
       self.prompt = "#{ machine.name }> "
 
       if Qcmd.context.machine.workspaces.size == 1
+        Qcmd.debug '(only one workspace available)'
         use_workspace Qcmd.context.machine.workspaces.first
       end
     end
 
     def use_workspace workspace
+      Qcmd.debug %[(connecting to workspace: "#{workspace.name}")]
       # set workspace in context. Will unset later if there's a problem.
       Qcmd.context.workspace = workspace
       self.prompt = "#{ Qcmd.context.machine.name }:#{ workspace.name }> "
+
       server.connect_to_workspace workspace
     end
 

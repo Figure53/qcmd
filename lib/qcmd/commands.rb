@@ -7,40 +7,28 @@ module Qcmd
     # name, response
 
     class << self
-      def wait?(command)
-        %w(cues workspaces name).include?(command)
-      end
+      def expects_reply? osc_message
+        # Qcmd.debug "(expects_reply? #{ osc_message.address } " +
+        #            "#{ osc_message.has_arguments? ? 'with' : 'without' } arguments)"
 
-      def root
-        @root ||= cmap [
-          ['connect', true]
-        ]
-      end
-
-      def machine
-        @machine ||= cmap [
-          ['workspaces', true]
-        ]
-      end
-
-      def workspace
-        @workspace ||= cmap [
-          ['cues', true],
-          ['go', false]
-        ]
-      end
-
-      def cue
-        @cue ||= cmap [
-          ['name', true],
-          ['go', false]
-        ]
-      end
-
-      private
-
-      def cmap commands
-        commands.map {|c| Command.new(c)}
+        case osc_message.address
+        when /workspaces/, /cueLists/ # no args, always listen
+          true
+        when %r[cue/[^/]+/name] # listen if args not present
+          if osc_message.has_arguments?
+            false
+          else
+            true
+          end
+        when %r[workspace/[^/]+/connect] # listen if args present
+          if osc_message.has_arguments?
+            true
+          else
+            false
+          end
+        else
+          false
+        end
       end
     end
   end

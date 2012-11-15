@@ -2,6 +2,7 @@ require 'qcmd/version'
 require 'qcmd/input_completer'
 
 require 'qcmd/core_ext/array'
+require 'qcmd/core_ext/osc/message'
 
 module Qcmd
   # Your code goes here...
@@ -13,6 +14,7 @@ module Qcmd
   autoload :Network, 'qcmd/network'
   autoload :QLab, 'qcmd/qlab'
   autoload :Plaintext, 'qcmd/plaintext'
+  autoload :Commands, 'qcmd/commands'
   autoload :VERSION, 'qcmd/version'
 
   class << self

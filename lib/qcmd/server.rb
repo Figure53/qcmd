@@ -16,6 +16,7 @@ module Qcmd
       connect_to_client
 
       @handler = Qcmd::Handler.new
+      @sent_messages = []
     end
 
     def connect_to_client
@@ -27,16 +28,23 @@ module Qcmd
     end
 
     def generic_responding_proc
-      proc do |message|
-        Qcmd.debug "(received message: #{ message.to_a.first.inspect })"
+      proc do |osc_message|
+        Qcmd.debug "(received message: #{ osc_message.to_a.first.inspect })"
         begin
-          json = JSON.parse message.to_a.first
+          json = JSON.parse osc_message.to_a.first
           response = @handler.handle json['address'], json['data']
         rescue => ex
+          json = nil
+          response = nil
           Qcmd.debug "(ERROR: #{ ex.message })"
         end
 
-        reply_received! response
+        message = {
+          :json => json,
+          :osc => osc_message
+        }
+
+        reply_received(message, response)
       end
     end
 
@@ -53,33 +61,38 @@ module Qcmd
       receive_channel.add_method %r{/reply/?(.*)}, &generic_responding_proc
     end
 
-    def reply_received! response
-      @response = response
-      @reply_received = true
+    def replies_expected?
+      @sent_messages.any? do |message|
+        Qcmd::Commands.expects_reply?(message)
+      end
     end
 
-    def wait_for_reply reply_expected=true
-      begin
-        @reply_received = false
+    def reply_received message, response
+      Qcmd.debug "(marking reply as received for #{ message.inspect })"
 
+      if @sent_messages.any? {|sent| sent.address == message[:json]['address']}
+        Qcmd.debug "(removing message from queue (#{@sent_messages.size} in queue))"
+
+        # remove message from sent queue
+        @sent_messages.reject! {|m| m.address == message[:json]['address']}
+
+        Qcmd.debug "(removed message from queue (#{@sent_messages.size} in queue))"
+      end
+    end
+
+    def wait_for_replies
+      begin
         yield
 
-        if reply_expected
-          # block until reply received or server times out
-          naps = 0
-          loop do
-            if @reply_received
-              break
-            end
-
-            if naps > 50
-              # FAILED TO GET RESPONSE
-              raise TimeoutError.new
-            end
-
-            naps += 1
-            sleep 0.1
+        naps = 0
+        while replies_expected? do
+          if naps > 20
+            # FAILED TO GET RESPONSE
+            raise TimeoutError.new
           end
+
+          naps += 1
+          sleep 0.1
         end
       rescue TimeoutError => ex
         Qcmd.log "[error: reply timeout]"
@@ -89,14 +102,24 @@ module Qcmd
     def send_command command, *args
       options = args.extract_options!
 
+      # make sure command is valid OSC Address
       if %r[^/] =~ command
         address = command
       else
         address = "/#{ command }"
       end
 
-      wait_for_reply do
-        osc_message = OSC::Message.new address, *args
+      osc_message = OSC::Message.new address, *args
+
+      send_message osc_message
+    end
+
+    def send_message osc_message
+      @sent_messages << osc_message
+
+      Qcmd.debug "(sending osc message #{ osc_message.address } #{osc_message.has_arguments? ? 'with' : 'without'} args)"
+
+      wait_for_replies do
         send_channel.send osc_message
       end
     end
@@ -131,6 +154,8 @@ module Qcmd
 
     def connect_to_workspace workspace
       send_command "workspace/#{workspace.id}/connect"
+
+      sleep 0.1
 
       # if it worked...
       if Qcmd.context.workspace

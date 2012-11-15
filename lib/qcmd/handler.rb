@@ -18,7 +18,7 @@ module Qcmd
                   'only enter a passcode if your workspace uses one'
         print wrapped_text(message)
         print
-      when %r[/workspace/[^/]*/connect]
+      when %r[/workspace/[^/]+/connect]
         # connecting to a workspace
         if data == 'badpass'
           Qcmd.context.workspace = nil
