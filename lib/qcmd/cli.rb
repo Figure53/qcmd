@@ -54,11 +54,6 @@ module Qcmd
       server.load_workspaces
 
       self.prompt = "#{ machine.name }> "
-
-      if Qcmd.context.machine.workspaces.size == 1
-        Qcmd.debug '(only one workspace available)'
-        use_workspace Qcmd.context.machine.workspaces.first
-      end
     end
 
     def use_workspace workspace

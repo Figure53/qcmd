@@ -2,7 +2,7 @@ require 'dnssd'
 
 module Qcmd
   class Network
-    BROWSE_TIMEOUT = 3
+    BROWSE_TIMEOUT = 10
 
     class << self
       attr_accessor :machines, :browse_thread
@@ -23,7 +23,7 @@ module Qcmd
 
         # sleep for 3 seconds
         while naps < BROWSE_TIMEOUT
-          sleep 1
+          sleep 0.1
           naps += 1
 
           if machines.size != previous

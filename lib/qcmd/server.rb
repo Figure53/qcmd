@@ -17,6 +17,8 @@ module Qcmd
 
       @handler = Qcmd::Handler.new
       @sent_messages = []
+      @sent_messages_expecting_reply = []
+      @received_messages = []
     end
 
     def connect_to_client
@@ -29,22 +31,12 @@ module Qcmd
 
     def generic_responding_proc
       proc do |osc_message|
-        Qcmd.debug "(received message: #{ osc_message.to_a.first.inspect })"
         begin
-          json = JSON.parse osc_message.to_a.first
-          response = @handler.handle json['address'], json['data']
+          Qcmd.debug "(received message: #{ osc_message.to_a.first.inspect })"
+          reply_received QLab::Reply.new(osc_message)
         rescue => ex
-          json = nil
-          response = nil
-          Qcmd.debug "(ERROR: #{ ex.message })"
+          Qcmd.debug "(ERROR #{ ex.message })"
         end
-
-        message = {
-          :json => json,
-          :osc => osc_message
-        }
-
-        reply_received(message, response)
       end
     end
 
@@ -62,22 +54,19 @@ module Qcmd
     end
 
     def replies_expected?
-      @sent_messages.any? do |message|
-        Qcmd::Commands.expects_reply?(message)
-      end
+      @sent_messages_expecting_reply.size > 0
     end
 
-    def reply_received message, response
-      Qcmd.debug "(marking reply as received for #{ message.inspect })"
+    def reply_received reply
+      Qcmd.debug "(receiving #{ reply.inspect })"
 
-      if @sent_messages.any? {|sent| sent.address == message[:json]['address']}
-        Qcmd.debug "(removing message from queue (#{@sent_messages.size} in queue))"
+      # update world state
+      @handler.handle reply
 
-        # remove message from sent queue
-        @sent_messages.reject! {|m| m.address == message[:json]['address']}
+      # FIFO
+      @sent_messages_expecting_reply.shift
 
-        Qcmd.debug "(removed message from queue (#{@sent_messages.size} in queue))"
-      end
+      Qcmd.debug "(#{ @sent_messages_expecting_reply.size } messages awaiting reply)"
     end
 
     def wait_for_replies
@@ -116,6 +105,9 @@ module Qcmd
 
     def send_message osc_message
       @sent_messages << osc_message
+      if Qcmd::Commands.expects_reply?(osc_message)
+        @sent_messages_expecting_reply << osc_message
+      end
 
       Qcmd.debug "(sending osc message #{ osc_message.address } #{osc_message.has_arguments? ? 'with' : 'without'} args)"
 
@@ -153,9 +145,13 @@ module Qcmd
     end
 
     def connect_to_workspace workspace
-      send_command "workspace/#{workspace.id}/connect"
+      if workspace.passcode?
+        send_command "workspace/#{workspace.id}/connect", workspace.passcode
+      else
+        send_command "workspace/#{workspace.id}/connect"
+      end
 
-      sleep 0.1
+      # sleep 0.1
 
       # if it worked...
       if Qcmd.context.workspace
