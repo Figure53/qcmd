@@ -1,27 +1,24 @@
 module Qcmd
   module QLab
-    class Reply
-      attr_accessor :address, :data
-      def initialize osc_message
-        @message = osc_message
+    class Reply < Struct.new(:osc_message)
+      def json
+        @json ||= JSON.parse(osc_message.to_a.first)
+      end
 
-        begin
-          @json = JSON.parse @message.to_a.first
-        rescue ParserError => ex
-          Qcmd.print "FAILED TO PARSE QLAB RESPONSE"
-          return
-        end
+      def address
+        @address ||= json['address']
+      end
 
-        self.address = @json['address']
-        self.data    = @json['data']
+      def data
+        @data ||= json['data']
       end
 
       def is_cue_command?
-        Qcmd::Commands.is_cue_command?(self.address)
+        Qcmd::Commands.is_cue_command?(address)
       end
 
       def to_s
-        "<Qcmd::Qlab::Reply address:'#{address}' data:#{self.data.inspect}>"
+        "<Qcmd::Qlab::Reply address:'#{address}' data:#{data.inspect}>"
       end
     end
   end

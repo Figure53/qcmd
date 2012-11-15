@@ -1,5 +1,6 @@
 require 'osc-ruby'
 require 'osc-ruby/em_server'
+require 'ruby-debug'
 
 require 'json'
 
@@ -32,7 +33,7 @@ module Qcmd
     def generic_responding_proc
       proc do |osc_message|
         begin
-          Qcmd.debug "(received message: #{ osc_message.to_a.first.inspect })"
+          Qcmd.debug "(received message: #{ osc_message.address })"
           reply_received QLab::Reply.new(osc_message)
         rescue => ex
           Qcmd.debug "(ERROR #{ ex.message })"
@@ -43,6 +44,7 @@ module Qcmd
     # initialize
     def listen
       if receive_channel && receive_thread && receive_thread.alive?
+        Qcmd.debug "(stopping existing server)"
         stop
       end
 
@@ -58,10 +60,14 @@ module Qcmd
     end
 
     def reply_received reply
-      Qcmd.debug "(receiving #{ reply.inspect })"
+      Qcmd.debug "(receiving #{ reply })"
 
       # update world state
-      @handler.handle reply
+      begin
+        @handler.handle reply
+      rescue => ex
+        print "(ERROR: #{ ex.message })"
+      end
 
       # FIFO
       @sent_messages_expecting_reply.shift
@@ -90,6 +96,8 @@ module Qcmd
 
     def send_command command, *args
       options = args.extract_options!
+
+      Qcmd.debug "(building command from command, args, options: #{ command.inspect }, #{ args.inspect }, #{ options.inspect })"
 
       # make sure command is valid OSC Address
       if %r[^/] =~ command
@@ -134,6 +142,11 @@ module Qcmd
       send_command(command, *args)
     end
 
+    def send_cue_command number, action, *args
+      command = "cue/#{ number }/#{ action }"
+      send_workspace_command(command, *args)
+    end
+
     ## QLab commands
 
     def load_workspaces
@@ -151,9 +164,7 @@ module Qcmd
         send_command "workspace/#{workspace.id}/connect"
       end
 
-      # sleep 0.1
-
-      # if it worked...
+      # if it worked, load cues automatically
       if Qcmd.context.workspace
         load_cues
       end

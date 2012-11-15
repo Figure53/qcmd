@@ -9,6 +9,7 @@ module Qcmd
   autoload :Handler, 'qcmd/handler'
   autoload :Server, 'qcmd/server'
   autoload :Context, 'qcmd/context'
+  autoload :Parser, 'qcmd/parser'
   autoload :CLI, 'qcmd/cli'
   autoload :Machine, 'qcmd/machine'
   autoload :Network, 'qcmd/network'

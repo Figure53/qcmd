@@ -1,11 +1,5 @@
 module Qcmd
-  class Command < Struct.new(:name, :response)
-  end
-
   module Commands
-
-    # name, response
-
     class << self
       def expects_reply? osc_message
         case osc_message.address

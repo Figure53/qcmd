@@ -27,7 +27,9 @@ module Qcmd
           naps += 1
 
           if machines.size != previous
-            puts "found #{ machines.size } QLab machine#{ machines.size == 1 ? '' : 's'}"
+            Qcmd.print
+            Qcmd.print "Found #{ machines.size } QLab machine#{ machines.size == 1 ? '' : 's'}"
+            Qcmd.print
             previous = machines.size
           end
         end
@@ -37,7 +39,7 @@ module Qcmd
 
       def display
         longest = machines.map {|m| m.name.size}.max
-        Qcmd.print
+
         machines.each_with_index do |machine, n|
           if Qcmd.debug?
             Qcmd.print "#{ n + 1 }. %-#{ longest + 2 }s%s" % [machine.name, machine.client_string]

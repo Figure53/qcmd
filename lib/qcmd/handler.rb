@@ -4,6 +4,7 @@ module Qcmd
 
     def handle reply
       Qcmd.debug "(handling #{ reply })"
+
       case reply.address
       when %r[/workspaces]
         Qcmd.context.machine.workspaces = reply.data.map {|ws| Qcmd::QLab::Workspace.new(ws)}
@@ -15,18 +16,20 @@ module Qcmd
         end
 
         print
-        message = 'type `use "WORKSPACE_NAME" PASSCODE` or `use WORKSPACE_NUMBER PASSCODE` to load a workspace' +
-                  'only enter a passcode if your workspace uses one'
-        print wrapped_text(message)
+        print wrapped_text('Type `use "WORKSPACE_NAME" PASSCODE` to load a workspace. ' +
+                           'Only enter a passcode if your workspace uses one')
         print
+
       when %r[/workspace/[^/]+/connect]
         # connecting to a workspace
         if reply.data == 'badpass'
-          Qcmd.context.workspace = nil
           print 'failed to connect to workspace'
+          Qcmd.context.disconnect_workspace
         elsif reply.data == 'ok'
           print 'connected to workspace'
+          Qcmd.context.workspace_connected = true
         end
+
       when %r[/cueLists]
         Qcmd.debug "(received cueLists)"
         # looking for cues here
@@ -38,8 +41,9 @@ module Qcmd
       when %r[/(cue|cue_id)/[^/]+/[a-zA-Z]+]
         # properties, just print reply data
         print reply.data
+
       else
-        Qcmd.debug "(unrecognized message, cannot handle #{ reply.address })"
+        Qcmd.debug "(unrecognized message from QLab, cannot handle #{ reply.address })"
       end
     end
   end

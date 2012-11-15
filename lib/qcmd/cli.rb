@@ -81,7 +81,7 @@ module Qcmd
           next
         end
 
-        args    = message.strip.split
+        args    = Qcmd::Parser.parse(message)
         command = args.shift
 
         case command
@@ -106,36 +106,35 @@ module Qcmd
         when 'use'
           Qcmd.debug "(use command received args: #{ args.inspect })"
 
-          argument_string = args.join ' '
-
-          if match = /"([^"]+)"/.match(argument_string)
-            # look for matching quotes
-            workspace_name = match[1]
-            passcode = argument_string.gsub(/"([^"]+)"/, '').strip
-          else
-            workspace_name = args.shift
-            passcode       = args.shift
-          end
+          workspace_name = args.shift.gsub(/['"]/, '')
+          passcode       = args.shift
 
           Qcmd.debug "(using workspace: #{ workspace_name.inspect })"
+
           if workspace = Qcmd.context.machine.find_workspace(workspace_name)
             workspace.passcode = passcode
             print "connecting to workspace: #{workspace_name}"
             use_workspace workspace
           end
         when 'cues'
-          ## Cues Table
-          if Qcmd.context.workspace.cues
+          if !Qcmd.context.workspace_connected?
+            print "You must be connected to a workspace before you can view a cue list."
+          elsif Qcmd.context.workspace.cues
+            print
+            print centered_text(" Cues ", '-')
             table ['Number', 'Id', 'Name', 'Type'], Qcmd.context.workspace.cues.map {|cue|
               [cue.number, cue.id, cue.name, cue.type]
             }
+            print
           end
+        when 'cue'
+          # pull off cue number
+          cue_number = args.shift
+          cue_action = args.shift
+          args = args.map {|a| a.gsub(/^"/, '').gsub(/"$/, '')}
+          server.send_cue_command(cue_number, cue_action, *args)
         else
-          if Qcmd.context.workspace
-            server.send_workspace_command(command, *args)
-          else
-            server.send_command(command, *args)
-          end
+          server.send_command(command, *args)
         end
       end
     end

@@ -92,7 +92,7 @@ module Qcmd
     end
 
     def table headers, rows
-      Qcmd.print
+      print
       columns = headers.map(&:size)
       rows.each do |row|
         columns.each_with_index do |col, n|
@@ -100,13 +100,13 @@ module Qcmd
         end
       end
 
-      row_format = columns.map {|n| "%#{n}s"}.join('')
-      Qcmd.print row_format % headers
-      Qcmd.print '-' * columns.inject(0, :+)
+      row_format = columns.map {|n| "%#{n}s\t"}.join('')
+      print row_format % headers
+      print
       rows.each do |row|
-        Qcmd.print row_format % row
+        print row_format % row
       end
-      Qcmd.print
+      print
     end
   end
 end

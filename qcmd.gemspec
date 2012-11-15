@@ -26,4 +26,5 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency "rspec"
   gem.add_development_dependency "cucumber"
   gem.add_development_dependency "aruba"
+  gem.add_development_dependency 'ruby-debug'
 end
