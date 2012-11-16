@@ -3,7 +3,11 @@ require 'readline'
 module Qcmd
   module InputCompleter
     ReservedWords = %w[
-      connect exit workspaces disconnect
+      connect exit workspace workspaces disconnect
+    ]
+
+    ReservedWorkspaceWords = %w[
+      cueLists selectedCues runningCues runningOrPausedCues thump
     ]
 
     ReservedCueWords = %w[
@@ -17,9 +21,8 @@ module Qcmd
 
     CompletionProc = Proc.new {|input|
       # puts "input: #{ input }"
-      # bind = Qcmd.context.binding
 
-      matcher = /^#{Regexp.escape(input)}/
+      matcher  = /^#{Regexp.escape(input)}/
       commands = ReservedWords.grep(matcher)
 
       if Qcmd.connected? && Qcmd.context
@@ -27,7 +30,10 @@ module Qcmd
         if Qcmd.context.workspace_connected?
           # have selected a workspace
           cue_numbers = Qcmd.context.workspace.cues.map(&:number)
-          commands    = commands + ReservedCueWords.grep(matcher) + cue_numbers.grep(matcher)
+          commands    = commands +
+                        cue_numbers.grep(matcher) +
+                        ReservedCueWords.grep(matcher) +
+                        ReservedWorkspaceWords.grep(matcher)
         else
           # haven't selected a workspace yet
           names           = Qcmd.context.machine.workspace_names
@@ -57,4 +63,5 @@ if Readline.respond_to?("basic_word_break_characters=")
   Readline.basic_word_break_characters= " \t\n`><=;|&{("
 end
 Readline.completion_append_character = nil
+Readline.completion_case_fold = true
 Readline.completion_proc = Qcmd::InputCompleter::CompletionProc

@@ -32,6 +32,8 @@ module Qcmd
 
     def generic_responding_proc
       proc do |osc_message|
+        @received_messages << osc_message
+
         begin
           Qcmd.debug "(received message: #{ osc_message.address })"
           reply_received QLab::Reply.new(osc_message)
@@ -91,6 +93,8 @@ module Qcmd
         end
       rescue TimeoutError => ex
         Qcmd.log "[error: reply timeout]"
+        # clear expecting reply item, assume it will never arrive
+        @sent_messages_expecting_reply.shift
       end
     end
 
@@ -112,12 +116,13 @@ module Qcmd
     end
 
     def send_message osc_message
+      Qcmd.debug "(sending osc message #{ osc_message.address } #{osc_message.has_arguments? ? 'with' : 'without'} args)"
+
       @sent_messages << osc_message
       if Qcmd::Commands.expects_reply?(osc_message)
+        Qcmd.debug "(this command expects a reply)"
         @sent_messages_expecting_reply << osc_message
       end
-
-      Qcmd.debug "(sending osc message #{ osc_message.address } #{osc_message.has_arguments? ? 'with' : 'without'} args)"
 
       wait_for_replies do
         send_channel.send osc_message

@@ -32,16 +32,46 @@ module Qcmd
 
       when %r[/cueLists]
         Qcmd.debug "(received cueLists)"
-        # looking for cues here
+
+        # load global cue list
         Qcmd.context.workspace.cues = cues = reply.data.map {|cue_list|
           cue_list['cues'].map {|cue| Qcmd::QLab::Cue.new(cue)}
         }.compact.flatten
+
         print "loaded #{pluralize cues.size, 'cue'}"
+
+      when %r[/(selectedCues|runningCues|runningOrPausedCues)]
+        cues = reply.data.map {|cue|
+          cues = [Qcmd::QLab::Cue.new(cue)]
+
+          if cue['cues']
+            cues << cue['cues'].map {|cue| Qcmd::QLab::Cue.new(cue)}
+          end
+
+          cues
+        }.compact.flatten
+
+        title = case reply.address
+                when /selectedCues/;        "Selected Cues"
+                when /runningCues/;         "Running Cues"
+                when /runningOrPausedCues/; "Running or Paused Cues"
+                end
+
+        print
+        print centered_text(" #{title} ", '-')
+        table(['Number', 'Id', 'Name', 'Type'], cues.map {|cue|
+          [cue.number, cue.id, cue.name, cue.type]
+        })
+        print
 
       when %r[/(cue|cue_id)/[^/]+/[a-zA-Z]+]
         # properties, just print reply data
-        print reply.data
-
+        result = reply.data
+        if result.is_a?(String) || result.is_a?(Numeric)
+          print result
+        else
+          print result.inspect
+        end
       else
         Qcmd.debug "(unrecognized message from QLab, cannot handle #{ reply.address })"
       end
