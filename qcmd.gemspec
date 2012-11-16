@@ -8,9 +8,9 @@ Gem::Specification.new do |gem|
   gem.version       = Qcmd::VERSION
   gem.authors       = ["Adam Bachman"]
   gem.email         = ["adam.bachman@gmail.com"]
-  gem.description   = %q{A simple interactive QLab controller}
-  gem.summary       = %q{QLab in text}
-  gem.homepage      = "http://github.com/abachman/qcmd"
+  gem.description   = %q{A simple interactive QLab 3 command line controller}
+  gem.summary       = %q{QLab 3 console}
+  gem.homepage      = "https://github.com/abachman/qcmd"
 
   gem.files         = `git ls-files`.split($/)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
