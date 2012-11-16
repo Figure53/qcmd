@@ -96,6 +96,9 @@ module Qcmd
       when 'connect'
         Qcmd.debug "(connect command received args: #{ args.inspect })"
 
+        # remove quoted strings
+        args = args.map {|a| a.gsub(/^"/, '').gsub(/"$/, '')}
+
         machine_name = args.shift
         passcode     = args.shift
 

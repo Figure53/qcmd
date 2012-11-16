@@ -51,7 +51,20 @@ module Qcmd
         end
       else
         # haven't selected a machine yet
-        commands = commands + Qcmd::Network.names.grep(matcher)
+        machine_names = Qcmd::Network.names
+        quoted_names = machine_names.map {|mn| %["#{mn}"]}
+        names = (quoted_names + machine_names).grep(matcher)
+        names = names.map {|wsn|
+          if / / =~ wsn && /"/ !~ wsn
+            # if workspace name has a space and is not already quoted
+            %["#{ wsn }"]
+          else
+            wsn
+          end
+        }
+
+        # unquote
+        commands = commands + names
       end
 
       commands
