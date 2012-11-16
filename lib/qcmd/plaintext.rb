@@ -14,7 +14,11 @@ module Qcmd
     end
 
     def columns
-      80
+      begin
+        `stty size`.split.last.to_i
+      rescue
+        80
+      end
     end
 
     def pluralize n, word
