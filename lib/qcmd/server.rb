@@ -1,6 +1,9 @@
 require 'osc-ruby'
 require 'osc-ruby/em_server'
-require 'ruby-debug'
+begin
+  require 'ruby-debug'
+rescue LoadError
+end
 
 require 'json'
 
