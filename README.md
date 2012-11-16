@@ -1,24 +1,128 @@
 # Qcmd
 
-TODO: Write a gem description
+`qcmd` is intended to be a simple command line client for QLab utilizing
+QLab 3's new OSC interface. `qcmd` should be useable from any machine on
+the same local network as the QLab workspace you intend to work with.
+
+**This project should be considered experimental. DO NOT RUN SHOWS WITH
+IT.**
+
 
 ## Installation
 
-Add this line to your application's Gemfile:
-
-    gem 'qcmd'
-
-And then execute:
-
-    $ bundle
-
-Or install it yourself as:
+Install this gem to your machine by running the following command:
 
     $ gem install qcmd
 
-## Usage
+That should do ya.
 
-TODO: Write usage instructions here
+## Starting the `qcmd` console.
+
+Run the following command in a terminal window:
+
+    $ qcmd
+
+From there, you can connect to a machine, connect to a workspace, and then
+send commands to cues and the workspace.
+
+`qcmd` supports tab completion for commands in case you get stuck or are
+wondering what you can do from the console.
+
+Run `qcmd` with the -v option to get full debugging output. Use the main
+project repository (https://github.com/abachman/qcmd) to report any issues.
+
+An example session might look like this:
+
+    $ qcmd
+                         .::::    .::                .::
+                       .::    .:: .::                .::
+                     .::       .::.::         .::    .::
+                     .::       .::.::       .::  .:: .:: .::
+                     .::       .::.::      .::   .:: .::   .::
+                       .:: .: .:: .::      .::   .:: .::   .::
+                         .:: ::   .::::::::  .:: .:::.:: .::
+                              .:
+
+                   qcmd 0.1.0 (c) 2012 Figure 53, Baltimore, MD.
+
+    Found 2 QLab machines
+
+    1. adam-retina
+    2. f53zwimac
+
+    type `connect MACHINE` to connect to a machine
+
+    > connect adam-retina
+    connecting to machine: adam-retina
+    -------------------------------- Workspaces --------------------------------
+
+    1. Untitled Workspace
+
+    Type `use "WORKSPACE_NAME" PASSCODE` to load a workspace. Only enter a
+    passcode if your workspace uses one
+
+    adam-retina> use "Untitled Workspace"
+    connecting to workspace: Untitled Workspace
+    connected to workspace
+    loaded 2 cues
+    adam-retina:Untitled Workspace> cues
+
+    ----------------------------------- Cues -----------------------------------
+
+      Number          Id      Name    Type
+
+           1           2      Nope    Wait
+           2           3      Nipe   Audio
+
+
+    adam-retina:Untitled Workspace> cue 2 start
+    adam-retina:Untitled Workspace> cue 2 isRunning
+    true
+    adam-retina:Untitled Workspace> workspace runningCues
+
+    ------------------------------- Running Cues -------------------------------
+
+     Number  Id      Name     Type
+
+          2   3      Nipe    Audio
+
+
+    adam-retina:Untitled Workspace> cue 2
+    1                       2                       actionElapsed
+    allowsEditingDuration   armed                   basics
+    children                colorName               connect
+    continueMode            cue                     cueLists
+    cueTargetId             cueTargetNumber         disconnect
+    duration                exit                    flagged
+    hasCueTargets           hasFileTargets          isBroken
+    isLoaded                isPaused                isRunning
+    load                    loadAt                  name
+    notes                   number                  panic
+    pause                   percentActionElapsed    percentPostWaitElapsed
+    percentPreWaitElapsed   postWait                postWaitElapsed
+    preview                 preWait                 preWaitElapsed
+    reset                   resume                  runningCues
+    runningOrPausedCues     selectedCues            stop
+    thump                   type                    uniqueID
+    workspace               workspaces
+    adam-retina:Untitled Workspace> cue 2 pause
+    adam-retina:Untitled Workspace> cue 2 isRunning
+    false
+    adam-retina:Untitled Workspace> cue 2 percentActionElapsed
+    0.109189204871655
+    adam-retina:Untitled Workspace> disconnect
+
+    Found 2 QLab machines
+
+    1. adam-retina
+    2. f53zwimac
+
+    type `connect MACHINE` to connect to a machine
+
+    > exit
+    exiting...
+
+
 
 ## Contributing
 
