@@ -45,7 +45,7 @@ module Qcmd
 
     # initialize
     def listen
-      if receive_channel && receive_thread && receive_thread.alive?
+      if receive_channel
         Qcmd.debug "(stopping existing server)"
         stop
       end

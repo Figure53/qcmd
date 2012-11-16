@@ -122,8 +122,6 @@ An example session might look like this:
     > exit
     exiting...
 
-
-
 ## Contributing
 
 1. Fork it
