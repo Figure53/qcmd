@@ -56,7 +56,7 @@ module Qcmd
 
       def browse_and_display options={}
         browse
-        if options[:machine_given] && !find(options[:machine_name]).nil?
+        if !options[:machine_given] || (options[:machine_given] && !find(options[:machine_name]).nil?)
           display options
         end
       end
