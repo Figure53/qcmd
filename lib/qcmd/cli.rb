@@ -96,9 +96,6 @@ module Qcmd
       when 'connect'
         Qcmd.debug "(connect command received args: #{ args.inspect })"
 
-        # remove quoted strings
-        args = args.map {|a| a.gsub(/^"/, '').gsub(/"$/, '')}
-
         machine_name = args.shift
         passcode     = args.shift
 
@@ -114,7 +111,7 @@ module Qcmd
       when 'use'
         Qcmd.debug "(use command received args: #{ args.inspect })"
 
-        workspace_name = args.shift.gsub(/['"]/, '')
+        workspace_name = args.shift
         passcode       = args.shift
 
         Qcmd.debug "(using workspace: #{ workspace_name.inspect })"
@@ -139,7 +136,6 @@ module Qcmd
         # pull off cue number
         cue_number = args.shift
         cue_action = args.shift
-        args = args.map {|a| a.gsub(/^"/, '').gsub(/"$/, '')}
 
         if cue_number.nil?
           print "no cue command given. cue commands should be in the form:"

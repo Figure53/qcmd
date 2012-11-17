@@ -17,6 +17,7 @@ module Qcmd
       percentPreWaitElapsed percentActionElapsed percentPostWaitElapsed
       type number name notes cueTargetNumber cueTargetId preWait duration
       postWait continueMode flagged armed colorName basics children
+      sliderLevel sliderLevels
     ]
 
     CompletionProc = Proc.new {|input|
@@ -25,7 +26,7 @@ module Qcmd
       matcher  = /^#{Regexp.escape(input)}/
       commands = ReservedWords.grep(matcher)
 
-      if Qcmd.connected? && Qcmd.context
+      if Qcmd.connected?
         # have selected a machine
         if Qcmd.context.workspace_connected?
           # have selected a workspace

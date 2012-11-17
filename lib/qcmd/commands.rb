@@ -12,7 +12,7 @@ module Qcmd
       uniqueID hasFileTargets hasCueTargets allowsEditingDuration isLoaded
       isRunning isPaused isBroken preWaitElapsed actionElapsed
       postWaitElapsed percentPreWaitElapsed percentActionElapsed
-      percentPostWaitElapsed type
+      percentPostWaitElapsed type sliderLevels
       basics children
     )
 
@@ -20,6 +20,7 @@ module Qcmd
     NO_ARG_CUE_RESPONSE = %w(
       number name notes cueTargetNumber cueTargetId preWait duration
       postWait continueMode flagged armed colorName
+      sliderLevel
     )
 
     class << self
