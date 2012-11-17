@@ -27,9 +27,6 @@ module Qcmd
           naps += 1
 
           if machines.size != previous
-            Qcmd.print
-            Qcmd.print "Found #{ machines.size } QLab machine#{ machines.size == 1 ? '' : 's'}"
-            Qcmd.print
             previous = machines.size
           end
         end
@@ -37,8 +34,12 @@ module Qcmd
         Thread.kill(browse_thread) if browse_thread.alive?
       end
 
-      def display
+      def display options={}
         longest = machines.map {|m| m.name.size}.max
+
+        Qcmd.print
+        Qcmd.print "Found #{ machines.size } QLab machine#{ machines.size == 1 ? '' : 's'}"
+        Qcmd.print
 
         machines.each_with_index do |machine, n|
           if Qcmd.debug?
@@ -53,9 +54,11 @@ module Qcmd
         Qcmd.print
       end
 
-      def browse_and_display
+      def browse_and_display options={}
         browse
-        display
+        if options[:machine_given] && !find(options[:machine_name]).nil?
+          display options
+        end
       end
 
       def find machine_name

@@ -16,21 +16,21 @@ module Qcmd
     end
 
     def initialize options={}
+      Qcmd.debug "(launching with options: #{options.inspect})"
       # start local listening port
       Qcmd.context = Qcmd::Context.new
 
       self.prompt = '> '
 
-      start
-
-      # if local machines have already been detected and only one is available,
-      # use it.
-      if Qcmd::Network.machines
-        if Qcmd::Network.machines.size == 1 && !Qcmd::Network.machines.first.passcode?
-          puts "AUTOCONNECT"
-          connect Qcmd::Network.machines.first, nil
+      if options[:machine_given]
+        Qcmd.debug "(autoconnecting to #{ options[:machine] })"
+        connect_to_machine_by_name options[:machine], options[:machine_passcode]
+        if options[:workspace_given]
+          connect_to_workspace_by_name options[:workspace], options[:workspace_passcode]
         end
       end
+
+      start
     end
 
     def connect machine, passcode
@@ -54,6 +54,23 @@ module Qcmd
       server.load_workspaces
 
       self.prompt = "#{ machine.name }> "
+    end
+
+    def connect_to_machine_by_name machine_name, passcode
+      if machine = Qcmd::Network.find(machine_name)
+        print "connecting to machine: #{machine_name}"
+        connect machine, passcode
+      else
+        print 'sorry, that machine could not be found'
+      end
+    end
+
+    def connect_to_workspace_by_name workspace_name, passcode
+      if workspace = Qcmd.context.machine.find_workspace(workspace_name)
+        workspace.passcode = passcode
+        print "connecting to workspace: #{workspace_name}"
+        use_workspace workspace
+      end
     end
 
     def use_workspace workspace
@@ -99,12 +116,7 @@ module Qcmd
         machine_name = args.shift
         passcode     = args.shift
 
-        if machine = Qcmd::Network.find(machine_name)
-          print "connecting to machine: #{machine_name}"
-          connect machine, passcode
-        else
-          print 'sorry, that machine could not be found'
-        end
+        connect_to_machine_by_name machine_name, passcode
       when 'disconnect'
         reset
         Qcmd::Network.browse_and_display
@@ -116,11 +128,7 @@ module Qcmd
 
         Qcmd.debug "(using workspace: #{ workspace_name.inspect })"
 
-        if workspace = Qcmd.context.machine.find_workspace(workspace_name)
-          workspace.passcode = passcode
-          print "connecting to workspace: #{workspace_name}"
-          use_workspace workspace
-        end
+        connect_to_workspace_by_name workspace_name, passcode
       when 'cues'
         if !Qcmd.context.workspace_connected?
           print "You must be connected to a workspace before you can view a cue list."

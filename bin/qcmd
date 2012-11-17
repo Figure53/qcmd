@@ -9,6 +9,10 @@ opts = Trollop::options do
   version VERSION_STRING
   opt :verbose, 'Use verbose mode', :default => false
   opt :debug, "Show full debug output, don't make changes to workspaces", :default => false
+  opt :machine, "Automatically try to connect to the machine with the given name", :type => :string
+  opt :machine_passcode, "Use the given machine passcode", :type => :integer
+  opt :workspace, "Automatically try to connect to the workspace with the given name", :type => :string
+  opt :workspace_passcode, "Use the given workspace passcode", :type => :integer
 end
 
 if opts[:verbose]
@@ -26,6 +30,6 @@ Qcmd.ascii_qlab
 Qcmd.print
 Qcmd.print Qcmd.centered_text(VERSION_STRING)
 
-Qcmd::Network.browse_and_display
+Qcmd::Network.browse_and_display opts
 
 Qcmd::CLI.launch opts
