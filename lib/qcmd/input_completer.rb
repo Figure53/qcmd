@@ -2,12 +2,14 @@ require 'readline'
 
 module Qcmd
   module InputCompleter
+    # the commands listed here should represent every possible legal command
     ReservedWords = %w[
       connect exit workspace workspaces disconnect
     ]
 
     ReservedWorkspaceWords = %w[
       cueLists selectedCues runningCues runningOrPausedCues thump
+      go stop pause resume reset panic disconnect
     ]
 
     ReservedCueWords = %w[

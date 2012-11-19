@@ -37,9 +37,6 @@ module Qcmd
         Qcmd.context.workspace.cues = cues = reply.data.map {|cue_list|
           cue_list['cues'].map {|cue| Qcmd::QLab::Cue.new(cue)}
         }.compact.flatten
-
-        print "loaded #{pluralize cues.size, 'cue'}"
-
       when %r[/(selectedCues|runningCues|runningOrPausedCues)]
         cues = reply.data.map {|cue|
           cues = [Qcmd::QLab::Cue.new(cue)]

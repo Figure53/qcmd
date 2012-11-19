@@ -166,7 +166,15 @@ module Qcmd
         end
 
       else
-        server.send_command(command, *args)
+        if Qcmd.context.workspace_connected? && Qcmd::InputCompleter::ReservedWorkspaceWords.include?(command)
+          server.send_workspace_command(command, *args)
+        else
+            # might be legit OSC command, try sending
+          else
+            print "unrecognized command: #{ command }"
+          end
+        end
+
       end
     end
 
