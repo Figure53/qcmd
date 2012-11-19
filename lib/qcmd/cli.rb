@@ -107,7 +107,7 @@ module Qcmd
       command = args.shift
 
       case command
-      when 'exit'
+      when 'exit', 'quit', 'q'
         print 'exiting...'
         exit 0
       when 'connect'

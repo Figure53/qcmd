@@ -4,7 +4,7 @@ module Qcmd
   module InputCompleter
     # the commands listed here should represent every possible legal command
     ReservedWords = %w[
-      connect exit workspace workspaces disconnect
+      connect exit quit workspace workspaces disconnect
     ]
 
     ReservedWorkspaceWords = %w[
