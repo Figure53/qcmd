@@ -80,6 +80,9 @@ module Qcmd
       self.prompt = "#{ Qcmd.context.machine.name }:#{ workspace.name }> "
 
       server.connect_to_workspace workspace
+      if Qcmd.context.workspace.cues
+        print "loaded #{pluralize Qcmd.context.workspace.cues, 'cue'}"
+      end
     end
 
     def reset
@@ -110,6 +113,7 @@ module Qcmd
       when 'exit', 'quit', 'q'
         print 'exiting...'
         exit 0
+
       when 'connect'
         Qcmd.debug "(connect command received args: #{ args.inspect })"
 
@@ -117,9 +121,11 @@ module Qcmd
         passcode     = args.shift
 
         connect_to_machine_by_name machine_name, passcode
+
       when 'disconnect'
         reset
         Qcmd::Network.browse_and_display
+
       when 'use'
         Qcmd.debug "(use command received args: #{ args.inspect })"
 
@@ -129,10 +135,14 @@ module Qcmd
         Qcmd.debug "(using workspace: #{ workspace_name.inspect })"
 
         connect_to_workspace_by_name workspace_name, passcode
+
       when 'cues'
         if !Qcmd.context.workspace_connected?
           print "You must be connected to a workspace before you can view a cue list."
-        elsif Qcmd.context.workspace.cues
+        else
+          # reload cues
+          server.send_workspace_command 'cueLists'
+
           print
           print centered_text(" Cues ", '-')
           table ['Number', 'Id', 'Name', 'Type'], Qcmd.context.workspace.cues.map {|cue|
@@ -140,6 +150,7 @@ module Qcmd
           }
           print
         end
+
       when 'cue'
         # pull off cue number
         cue_number = args.shift
@@ -150,17 +161,18 @@ module Qcmd
           print
           print "  > cue NUMBER COMMAND ARGUMENTS"
           print
-          print wrapped_text("available cue commands are: #{Qcmd::InputCompleter::ReservedCueWords.inspect}")
+          print wrapped_text("available cue commands are: #{Qcmd::InputCompleter::ReservedCueWords.join(', ')}")
         elsif cue_action.nil?
-          server.send_workspace_command(cue_number)
+          server.send_workspace_command("cue/#{ cue_number }")
         else
           server.send_cue_command(cue_number, cue_action, *args)
         end
+
       when 'workspace'
         workspace_command = args.shift
 
         if workspace_command.nil?
-          print wrapped_text("no workspace command given. available workspace commands are: #{Qcmd::InputCompleter::ReservedWorkspaceWords.inspect}")
+          print wrapped_text("no workspace command given. available workspace commands are: #{Qcmd::InputCompleter::ReservedWorkspaceWords.join(', ')}")
         else
           server.send_workspace_command(workspace_command, *args)
         end
@@ -169,7 +181,9 @@ module Qcmd
         if Qcmd.context.workspace_connected? && Qcmd::InputCompleter::ReservedWorkspaceWords.include?(command)
           server.send_workspace_command(command, *args)
         else
+          if %r[/] =~ command
             # might be legit OSC command, try sending
+            server.send_command(command, *args)
           else
             print "unrecognized command: #{ command }"
           end
