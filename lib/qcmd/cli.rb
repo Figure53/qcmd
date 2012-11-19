@@ -81,7 +81,7 @@ module Qcmd
 
       server.connect_to_workspace workspace
       if Qcmd.context.workspace.cues
-        print "loaded #{pluralize Qcmd.context.workspace.cues, 'cue'}"
+        print "loaded #{pluralize Qcmd.context.workspace.cues.size, 'cue'}"
       end
     end
 
@@ -141,7 +141,7 @@ module Qcmd
           print "You must be connected to a workspace before you can view a cue list."
         else
           # reload cues
-          server.send_workspace_command 'cueLists'
+          server.load_cues
 
           print
           print centered_text(" Cues ", '-')
@@ -151,7 +151,7 @@ module Qcmd
           print
         end
 
-      when 'cue'
+      when 'cue', 'c'
         # pull off cue number
         cue_number = args.shift
         cue_action = args.shift
