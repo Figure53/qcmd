@@ -12,7 +12,7 @@ IT.**
 
 Install this gem to your machine by running the following command:
 
-    $ gem install qcmd
+    $ sudo gem install qcmd
 
 That should do ya.
 
