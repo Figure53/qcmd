@@ -58,6 +58,10 @@ module Qcmd
       word_wrap(line, :line_width => columns).split("\n")
     end
 
+    def print_wrapped line
+      print wrapped_text(line)
+    end
+
     def right_text line
       diff = [(columns - line.size), 0].max
       "%s%s" % [' ' * diff, line]
