@@ -12,7 +12,7 @@ module Qcmd
         print centered_text(" Workspaces ", '-')
         print
         Qcmd.context.machine.workspaces.each_with_index do |ws, n|
-          print "#{ n + 1 }. #{ ws.name }"
+          print "#{ n + 1 }. #{ ws.name }#{ ws.passcode? ? ' [PROTECTED]' : ''}"
         end
 
         print
@@ -23,7 +23,7 @@ module Qcmd
       when %r[/workspace/[^/]+/connect]
         # connecting to a workspace
         if reply.data == 'badpass'
-          print 'failed to connect to workspace'
+          print 'failed to connect to workspace, bad passcode or no passcode given'
           Qcmd.context.disconnect_workspace
         elsif reply.data == 'ok'
           print 'connected to workspace'
@@ -37,6 +37,7 @@ module Qcmd
         Qcmd.context.workspace.cues = cues = reply.data.map {|cue_list|
           cue_list['cues'].map {|cue| Qcmd::QLab::Cue.new(cue)}
         }.compact.flatten
+
       when %r[/(selectedCues|runningCues|runningOrPausedCues)]
         cues = reply.data.map {|cue|
           cues = [Qcmd::QLab::Cue.new(cue)]
