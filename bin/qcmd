@@ -13,6 +13,7 @@ opts = Trollop::options do
   opt :machine_passcode, "Use the given machine passcode", :type => :integer
   opt :workspace, "Automatically try to connect to the workspace with the given name", :type => :string
   opt :workspace_passcode, "Use the given workspace passcode", :type => :integer
+  opt :command, "Execute a single command and exit", :type => :string
 end
 
 if opts[:verbose]
@@ -26,10 +27,20 @@ end
 
 # browse local network and check for qlab + qlab workspaces
 
-Qcmd.ascii_qlab
-Qcmd.print
-Qcmd.print Qcmd.centered_text(VERSION_STRING)
+if !opts[:machine_given]
+  Qcmd.ascii_qlab
+  Qcmd.print
+  Qcmd.print Qcmd.centered_text(VERSION_STRING)
 
-Qcmd::Network.browse_and_display opts
+  Qcmd::Network.browse_and_display opts
+else
+  Qcmd::Network.browse
+end
+
+if options[:command_given] && !(options[:machine_given] && options[:workspace_given])
+  Qcmd.print_wrapped("if you give a command, you must also give a
+                      machine name and a workspace name to connect to")
+end
+
 
 Qcmd::CLI.launch opts

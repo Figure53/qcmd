@@ -24,9 +24,21 @@ module Qcmd
 
       if options[:machine_given]
         Qcmd.debug "(autoconnecting to #{ options[:machine] })"
-        connect_to_machine_by_name options[:machine], options[:machine_passcode]
+
+        Qcmd.while_quiet do
+          connect_to_machine_by_name options[:machine], options[:machine_passcode]
+        end
+
         if options[:workspace_given]
-          connect_to_workspace_by_name options[:workspace], options[:workspace_passcode]
+          Qcmd.while_quiet do
+            connect_to_workspace_by_name options[:workspace], options[:workspace_passcode]
+          end
+
+          if options[:command_given]
+            handle_message options[:command]
+            puts %[sent command "#{ options[:command] }"]
+            exit 0
+          end
         end
       end
 
@@ -167,7 +179,7 @@ module Qcmd
           print
           print "  > cue NUMBER COMMAND ARGUMENTS"
           print
-          print wrapped_text("available cue commands are: #{Qcmd::InputCompleter::ReservedCueWords.join(', ')}")
+          print_wrapped("available cue commands are: #{Qcmd::InputCompleter::ReservedCueWords.join(', ')}")
         elsif cue_action.nil?
           server.send_workspace_command("cue/#{ cue_number }")
         else
@@ -183,8 +195,8 @@ module Qcmd
         end
 
         if workspace_command.nil?
-          print wrapped_text("no workspace command given. available workspace commands
-                              are: #{Qcmd::InputCompleter::ReservedWorkspaceWords.join(', ')}")
+          print_wrapped("no workspace command given. available workspace commands
+                         are: #{Qcmd::InputCompleter::ReservedWorkspaceWords.join(', ')}")
         else
           server.send_workspace_command(workspace_command, *args)
         end
@@ -208,9 +220,9 @@ module Qcmd
     end
 
     def handle_failed_workspace_command command
-      print wrapped_text(%[the command, "#{ command }" can't be processed yet. you must
-                           first connect to a machine and a workspace
-                           before issuing other commands.])
+      print_wrapped(%[the command, "#{ command }" can't be processed yet. you must
+                      first connect to a machine and a workspace
+                      before issuing other commands.])
     end
   end
 end
