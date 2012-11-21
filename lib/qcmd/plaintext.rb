@@ -54,6 +54,7 @@ module Qcmd
 
     # turn line into lines of text of columns length
     def wrapped_text line
+      line = line.gsub(/\s+/, ' ') # collapse whitespace
       word_wrap(line, :line_width => columns).split("\n")
     end
 
