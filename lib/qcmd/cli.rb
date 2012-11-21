@@ -146,7 +146,12 @@ module Qcmd
 
         Qcmd.debug "(using workspace: #{ workspace_name.inspect })"
 
-        connect_to_workspace_by_name workspace_name, passcode
+        if workspace_name
+          connect_to_workspace_by_name workspace_name, passcode
+        else
+          print "No workspace name given. The following workspaces are available:"
+          Qcmd.context.print_workspace_list
+        end
 
       when 'cues'
         if !Qcmd.context.workspace_connected?
@@ -185,6 +190,14 @@ module Qcmd
         else
           server.send_cue_command(cue_number, cue_action, *args)
         end
+
+      when 'workspaces'
+        if !Qcmd.context.machine_connected?
+          puts 'cannot load workspaces until you are connected to a machine'
+          return
+        end
+
+        server.load_workspaces
 
       when 'workspace'
         workspace_command = args.shift

@@ -33,5 +33,18 @@ module Qcmd
         :workspace
       end
     end
+
+    def print_workspace_list
+      Qcmd.print Qcmd.centered_text(" Workspaces ", '-')
+      Qcmd.print
+
+      machine.workspaces.each_with_index do |ws, n|
+        Qcmd.print "#{ n + 1 }. #{ ws.name }#{ ws.passcode? ? ' [PROTECTED]' : ''}"
+      end
+
+      Qcmd.print
+      Qcmd.print_wrapped('Type `use "WORKSPACE_NAME" PASSCODE` to load a workspace. Passcode is optional.')
+      Qcmd.print
+    end
   end
 end

@@ -10,15 +10,7 @@ module Qcmd
         Qcmd.context.machine.workspaces = reply.data.map {|ws| Qcmd::QLab::Workspace.new(ws)}
 
         unless Qcmd.quiet?
-          print centered_text(" Workspaces ", '-')
-          print
-          Qcmd.context.machine.workspaces.each_with_index do |ws, n|
-            print "#{ n + 1 }. #{ ws.name }#{ ws.passcode? ? ' [PROTECTED]' : ''}"
-          end
-
-          print
-          print_wrapped('Type `use "WORKSPACE_NAME" PASSCODE` to load a workspace. Passcode is optional.')
-          print
+          Qcmd.context.print_workspace_list
         end
 
       when %r[/workspace/[^/]+/connect]
