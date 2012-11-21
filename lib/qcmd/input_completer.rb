@@ -42,14 +42,7 @@ module Qcmd
           names           = Qcmd.context.machine.workspace_names
           quoted_names    = names.map {|wn| %["#{wn}"]}
           workspace_names = (names + quoted_names).grep(matcher)
-          workspace_names = workspace_names.map {|wsn|
-            if / / =~ wsn && /"/ !~ wsn
-              # if workspace name has a space and is not already quoted
-              %["#{ wsn }"]
-            else
-              wsn
-            end
-          }
+          workspace_names = quote_if_necessary workspace_names
           commands = commands + workspace_names
         end
       else
@@ -57,21 +50,29 @@ module Qcmd
         machine_names = Qcmd::Network.names
         quoted_names = machine_names.map {|mn| %["#{mn}"]}
         names = (quoted_names + machine_names).grep(matcher)
-        names = names.map {|wsn|
-          if / / =~ wsn && /"/ !~ wsn
-            # if workspace name has a space and is not already quoted
-            %["#{ wsn }"]
-          else
-            wsn
-          end
-        }
-
+        names = quote_if_necessary(names)
         # unquote
         commands = commands + names
       end
 
       commands
     }
+
+    class << self
+      # if the name of a thing has a space in it, it must be surrounded by double
+      # quotes to be properly handled by the parser. so before we pass back
+      # unquoted space-containing results, we must quote them.
+      def quote_if_necessary names
+        names.map do |name|
+          if / / =~ name && /"/ !~ name
+            # if name has a space and is not already quoted
+            %["#{ name }"]
+          else
+            name
+          end
+        end
+      end
+    end
   end
 end
 
