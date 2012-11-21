@@ -37,7 +37,7 @@ else
   Qcmd::Network.browse
 end
 
-if options[:command_given] && !(options[:machine_given] && options[:workspace_given])
+if opts[:command_given] && !(opts[:machine_given] && opts[:workspace_given])
   Qcmd.print_wrapped("if you give a command, you must also give a
                       machine name and a workspace name to connect to")
 end
