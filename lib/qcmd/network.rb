@@ -2,11 +2,12 @@ require 'dnssd'
 
 module Qcmd
   class Network
-    BROWSE_TIMEOUT = 2
+    BROWSE_TIMEOUT = 8
 
     class << self
       attr_accessor :machines, :browse_thread
 
+      # browse can be used alone to populate the machines list
       def browse
         self.machines = []
         self.browse_thread = Thread.start do
@@ -21,9 +22,9 @@ module Qcmd
         changed = false
         previous = 0
 
-        # sleep for 3 seconds
+        # sleep for BROWSE_TIMEOUT loops
         while naps < BROWSE_TIMEOUT
-          sleep 1
+          sleep 0.2
           naps += 1
 
           if machines.size != previous
