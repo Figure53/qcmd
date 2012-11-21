@@ -77,11 +77,11 @@ module Qcmd
       Qcmd.debug %[(connecting to workspace: "#{workspace.name}")]
       # set workspace in context. Will unset later if there's a problem.
       Qcmd.context.workspace = workspace
-      self.prompt = "#{ Qcmd.context.machine.name }:#{ workspace.name }> "
 
       server.connect_to_workspace workspace
-      if Qcmd.context.workspace.cues
+      if Qcmd.context.workspace_connected? && Qcmd.context.workspace.cues
         print "loaded #{pluralize Qcmd.context.workspace.cues.size, 'cue'}"
+        self.prompt = "#{ Qcmd.context.machine.name }:#{ workspace.name }> "
       end
     end
 
@@ -138,20 +138,26 @@ module Qcmd
 
       when 'cues'
         if !Qcmd.context.workspace_connected?
-          print "You must be connected to a workspace before you can view a cue list."
-        else
-          # reload cues
-          server.load_cues
-
-          print
-          print centered_text(" Cues ", '-')
-          table ['Number', 'Id', 'Name', 'Type'], Qcmd.context.workspace.cues.map {|cue|
-            [cue.number, cue.id, cue.name, cue.type]
-          }
-          print
+          failed_workspace_command message
+          return
         end
 
+        # reload cues
+        server.load_cues
+
+        print
+        print centered_text(" Cues ", '-')
+        table ['Number', 'Id', 'Name', 'Type'], Qcmd.context.workspace.cues.map {|cue|
+          [cue.number, cue.id, cue.name, cue.type]
+        }
+        print
+
       when 'cue', 'c'
+        if !Qcmd.context.workspace_connected?
+          failed_workspace_command message
+          return
+        end
+
         # pull off cue number
         cue_number = args.shift
         cue_action = args.shift
@@ -171,26 +177,40 @@ module Qcmd
       when 'workspace'
         workspace_command = args.shift
 
+        if !Qcmd.context.workspace_connected?
+          handle_failed_workspace_command message
+          return
+        end
+
         if workspace_command.nil?
-          print wrapped_text("no workspace command given. available workspace commands are: #{Qcmd::InputCompleter::ReservedWorkspaceWords.join(', ')}")
+          print wrapped_text("no workspace command given. available workspace commands
+                              are: #{Qcmd::InputCompleter::ReservedWorkspaceWords.join(', ')}")
         else
           server.send_workspace_command(workspace_command, *args)
         end
 
       else
-        if Qcmd.context.workspace_connected? && Qcmd::InputCompleter::ReservedWorkspaceWords.include?(command)
-          server.send_workspace_command(command, *args)
-        else
-          if %r[/] =~ command
-            # might be legit OSC command, try sending
-            server.send_command(command, *args)
+        if Qcmd.context.workspace_connected?
+          if Qcmd::InputCompleter::ReservedWorkspaceWords.include?(command)
+            server.send_workspace_command(command, *args)
           else
-            print "unrecognized command: #{ command }"
+            if %r[/] =~ command
+              # might be legit OSC command, try sending
+              server.send_command(command, *args)
+            else
+              print "unrecognized command: #{ command }"
+            end
           end
+        else
+          handle_failed_workspace_command message
         end
-
       end
     end
 
+    def handle_failed_workspace_command command
+      print wrapped_text(%[the command, "#{ command }" can't be processed yet. you must
+                           first connect to a machine and a workspace
+                           before issuing other commands.])
+    end
   end
 end
