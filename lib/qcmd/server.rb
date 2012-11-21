@@ -167,7 +167,7 @@ module Qcmd
 
     def connect_to_workspace workspace
       if workspace.passcode?
-        send_command "workspace/#{workspace.id}/connect", workspace.passcode
+        send_command "workspace/#{workspace.id}/connect", "%04i" % workspace.passcode
       else
         send_command "workspace/#{workspace.id}/connect"
       end
