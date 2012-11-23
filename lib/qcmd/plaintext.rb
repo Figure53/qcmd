@@ -103,6 +103,14 @@ module Qcmd
     def table headers, rows
       print
       columns = headers.map(&:size)
+
+      # coerce row values to strings
+      rows.each do |row|
+        columns.each_with_index do |col, n|
+          row[n] = row[n].to_s
+        end
+      end
+
       rows.each do |row|
         columns.each_with_index do |col, n|
           columns[n] = [col, row[n].size].max + 1
