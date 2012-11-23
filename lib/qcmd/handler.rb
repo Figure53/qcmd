@@ -68,12 +68,17 @@ module Qcmd
               [key, result[key]]
             })
           else
-            print result.inspect
+            begin
+              print JSON.pretty_generate(result)
+            rescue JSON::GeneratorError
+              print result.to_s
+            end
           end
         end
 
       when %r[/thump]
         print reply.data
+
       else
         Qcmd.debug "(unrecognized message from QLab, cannot handle #{ reply.address })"
       end
