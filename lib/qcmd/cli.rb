@@ -3,7 +3,6 @@ require 'qcmd/server'
 require 'readline'
 
 require 'osc-ruby'
-require 'osc-ruby/em_server'
 
 module Qcmd
   class CLI

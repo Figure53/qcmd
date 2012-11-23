@@ -1,5 +1,4 @@
 require 'osc-ruby'
-require 'osc-ruby/em_server'
 begin
   require 'ruby-debug'
 rescue LoadError
@@ -49,7 +48,6 @@ module Qcmd
     # initialize
     def listen
       if receive_channel
-        Qcmd.debug "(stopping existing server)"
         stop
       end
 
@@ -133,7 +131,7 @@ module Qcmd
     end
 
     def stop
-      Thread.kill(receive_thread) if receive_thread.alive?
+      receive_channel.stop if receive_channel && receive_channel.state == :listening
     end
 
     def run

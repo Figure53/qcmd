@@ -42,6 +42,7 @@ describe OSC::StoppingServer do
     sleep 0.1
     server.stop
     sleep 0.1
+
     # server has stopped blocking
     test_thread.alive?.should == false
 

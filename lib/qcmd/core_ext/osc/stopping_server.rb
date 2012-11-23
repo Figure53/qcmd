@@ -2,6 +2,7 @@ module OSC
   class StoppingServer < Server
     def initialize *args
       @state = :initialized
+      @port  = args.first
       super(*args)
     end
 
@@ -14,6 +15,10 @@ module OSC
       @state = :stopping
       stop_detector
       stop_dispatcher
+    end
+
+    def state
+      @state
     end
 
   private
@@ -36,7 +41,7 @@ module OSC
         dispatch_message( mesg )
       end
     rescue StopException
-      @state == :stopped
+      @state = :stopped
     end
 
     def dispatch_message message
