@@ -36,7 +36,7 @@ module Qcmd
 
           if options[:command_given]
             handle_message options[:command]
-            puts %[sent command "#{ options[:command] }"]
+            print %[sent command "#{ options[:command] }"]
             exit 0
           end
         end
@@ -193,7 +193,7 @@ module Qcmd
 
       when 'workspaces'
         if !Qcmd.context.machine_connected?
-          puts 'cannot load workspaces until you are connected to a machine'
+          print 'cannot load workspaces until you are connected to a machine'
           return
         end
 

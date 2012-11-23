@@ -18,7 +18,6 @@ Gem::Specification.new do |gem|
   gem.require_paths = ["lib"]
 
   gem.add_runtime_dependency 'dnssd'
-  gem.add_runtime_dependency 'eventmachine'
   gem.add_runtime_dependency 'json'
   gem.add_runtime_dependency 'osc-ruby'
   gem.add_runtime_dependency 'trollop'

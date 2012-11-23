@@ -53,7 +53,7 @@ module Qcmd
         stop
       end
 
-      self.receive_channel = OSC::EMServer.new(self.receive_port)
+      self.receive_channel = OSC::StoppingServer.new(self.receive_port)
 
       Qcmd.debug "(opening receiving channel: #{ self.receive_channel.inspect })"
 

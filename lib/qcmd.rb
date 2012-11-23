@@ -1,8 +1,12 @@
+require 'socket'
+require 'osc-ruby'
+
 require 'qcmd/version'
 require 'qcmd/input_completer'
 
 require 'qcmd/core_ext/array'
 require 'qcmd/core_ext/osc/message'
+require 'qcmd/core_ext/osc/stopping_server'
 
 module Qcmd
   # Your code goes here...
