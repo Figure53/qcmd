@@ -61,8 +61,19 @@ module Qcmd
         if result.is_a?(String) || result.is_a?(Numeric)
           print result
         else
-          print result.inspect
+          case reply.address
+          when %r[/basics]
+            keys = result.keys.sort
+            table(['Field Name', 'Value'], keys.map {|key|
+              [key, result[key]]
+            })
+          else
+            print result.inspect
+          end
         end
+
+      when %r[/thump]
+        print reply.data
       else
         Qcmd.debug "(unrecognized message from QLab, cannot handle #{ reply.address })"
       end
