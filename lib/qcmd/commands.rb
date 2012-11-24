@@ -2,11 +2,17 @@ require 'qcmd/plaintext'
 
 module Qcmd
   module Commands
-    # Commands that expect reponses
+    # All Commands
+    #
+    # *_RESPONSE lists are commands that expect responses
+    #
+
+    NO_MACHINE_RESPONSE = %w(connect)
+
     MACHINE_RESPONSE = %w(workspaces)
 
     WORKSPACE_RESPONSE = %w(
-      cueLists selectedCues runningCues runningOrPausedCues connect thump
+      cueLists selectedCues runningCues runningOrPausedCues thump
     )
 
     WORKSPACE_NO_RESPONSE = %w(
@@ -50,6 +56,13 @@ module Qcmd
                        NO_ARG_CUE_RESPONSE
 
     class << self
+      def no_machine_response_matcher
+        @no_machine_response_matcher ||= %r[(#{NO_MACHINE_RESPONSE.join('|')})]
+      end
+      def no_machine_response_match command
+        !!(no_machine_response_matcher =~ command)
+      end
+
       def machine_response_matcher
         @machine_response_matcher ||= %r[(#{MACHINE_RESPONSE.join('|')})]
       end
@@ -89,7 +102,7 @@ module Qcmd
         when :none
           # shouldn't be dealing with OSC messages when unconnected to
           # machine or workspace
-          response = false
+          response = no_machine_response_match(address)
         when :machine
           # could be workspace or machine command
           response = machine_response_match(address) ||
