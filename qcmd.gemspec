@@ -22,8 +22,7 @@ Gem::Specification.new do |gem|
   gem.add_runtime_dependency 'osc-ruby'
   gem.add_runtime_dependency 'trollop'
 
-  gem.add_development_dependency "rspec"
+  gem.add_development_dependency "rspec", '~> 2.10.0'
   gem.add_development_dependency "cucumber"
   gem.add_development_dependency "aruba"
-  gem.add_development_dependency 'ruby-debug'
 end
