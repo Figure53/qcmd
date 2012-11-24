@@ -2,7 +2,7 @@ require 'dnssd'
 
 module Qcmd
   class Network
-    BROWSE_TIMEOUT = 8
+    BROWSE_TIMEOUT = 2
 
     class << self
       attr_accessor :machines, :browse_thread
@@ -18,19 +18,7 @@ module Qcmd
           end
         end
 
-        naps = 0
-        changed = false
-        previous = 0
-
-        # sleep for BROWSE_TIMEOUT loops
-        while naps < BROWSE_TIMEOUT
-          sleep 0.2
-          naps += 1
-
-          if machines.size != previous
-            previous = machines.size
-          end
-        end
+        sleep BROWSE_TIMEOUT
 
         Thread.kill(browse_thread) if browse_thread.alive?
       end
