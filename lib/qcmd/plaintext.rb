@@ -8,9 +8,9 @@ module Qcmd
       end
     end
 
-    # always output
+    # display output unless absolutely silent
     def print message=nil
-      log(message)
+      log(message) unless Qcmd.silent?
     end
 
     def set_columns value

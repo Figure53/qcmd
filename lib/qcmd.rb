@@ -37,13 +37,21 @@ module Qcmd
       self.log_level = :warning
     end
 
+    def silent!
+      self.log_level = :none
+    end
+
+    def silent?
+      self.log_level == :none
+    end
+
     def quiet?
       self.log_level == :warning
     end
 
     def while_quiet
       previous_level = self.log_level
-      self.log_level = :warning unless previous_level == :debug
+      self.log_level = :warning
       yield
       self.log_level = previous_level
     end
