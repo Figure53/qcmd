@@ -1,3 +1,5 @@
+require 'qcmd/plaintext'
+
 module Qcmd
   module Commands
     # Commands that expect reponses
@@ -5,6 +7,22 @@ module Qcmd
 
     WORKSPACE_RESPONSE = %w(
       cueLists selectedCues runningCues runningOrPausedCues connect thump
+    )
+
+    WORKSPACE_NO_RESPONSE = %w(
+      go stop pause resume reset panic
+    )
+
+    ALL_WORKSPACE_COMMANDS = [WORKSPACE_RESPONSE + WORKSPACE_NO_RESPONSE]
+
+    # commands that take no args and do not respond
+    CUE_NO_RESPONSE = %w(
+      start stop pause resume load preview reset panic
+    )
+
+    # commands that take args but do not respond
+    CUE_ARG_NO_RESPONSE = %w(
+      loadAt
     )
 
     # commands that always expect a response
@@ -16,12 +34,20 @@ module Qcmd
       basics children
     )
 
-    # commands that expect a response if given without args
+    # commands that take args but expect a response if given without args
     NO_ARG_CUE_RESPONSE = %w(
       number name notes cueTargetNumber cueTargetId preWait duration
       postWait continueMode flagged armed colorName
       sliderLevel
     )
+
+    # all cue commands that take arguments
+    CUE_ARG = CUE_ARG_NO_RESPONSE + NO_ARG_CUE_RESPONSE
+
+    ALL_CUE_COMMANDS = CUE_NO_RESPONSE +
+                       CUE_ARG_NO_RESPONSE +
+                       CUE_RESPONSE +
+                       NO_ARG_CUE_RESPONSE
 
     class << self
       def machine_response_matcher
@@ -99,6 +125,86 @@ module Qcmd
       def is_workspace_command? address
         /workspace/ =~ address && !(%r[cue/] =~ address || %r[cue_id/] =~ address)
       end
+    end
+
+    module Help
+      class << self
+
+        def print_all_commands
+          Qcmd.print %[
+#{Qcmd.centered_text(' Available Commands ', '-')}
+
+exit
+
+  close qcmd
+
+
+connect MACHINE_NAME
+
+  connect to the machine with name MACHINE_NAME
+
+
+disconnect
+
+  disconnect from the current machine and workspace
+
+
+use WORKSPACE_NAME [PASSCODE]
+
+  connect to the workspace with name WORKSPACE_NAME using passcode PASSCODE. A
+  passcode is only required if the workspace has one enabled.
+
+
+workspaces
+
+  show a list of the available workspaces for the currently connected machine.
+
+
+workspace COMMAND [VALUE]
+
+  pass the given COMMAND to the connected workspace. The following commands will
+  act on a workspace but will not return a value:
+
+    #{Qcmd.wrapped_text(Qcmd::Commands::WORKSPACE_NO_RESPONSE.sort.join(', '), :indent => '    ').join("\n")}
+
+  And these commands will not act on a workspace, but will return a value
+  (usually a list of cues):
+
+    #{Qcmd.wrapped_text((Qcmd::Commands::WORKSPACE_RESPONSE - ['connect']).sort.join(', '), :indent => '    ').join("\n")}
+
+  * Pro Tip: once you are connected to a workspace, you can just use COMMAND
+  and leave off "workspace" to quickly send the given COMMAND to the connected
+  workspace.
+
+
+cue NUMBER COMMAND [VALUE [ANOTHER_VALUE ...]]
+
+  send a command to the cue with the given NUMBER.
+
+  NUMBER can be a string or a number, depending on the command.
+
+  COMMAND can be one of:
+
+    #{Qcmd.wrapped_text(Qcmd::Commands::ALL_CUE_COMMANDS.sort.join(', '), :indent => '    ').join("\n")}
+
+  Of those commands, only some accept a VALUE. The following commands, if given
+  a value, will update the cue:
+
+    #{Qcmd.wrapped_text(Qcmd::Commands::CUE_ARG.sort.join(', '), :indent => '    ').join("\n")}
+
+  Some cues are Read-Only and will return information about a cue:
+
+    #{Qcmd.wrapped_text(Qcmd::Commands::CUE_RESPONSE.sort.join(', '), :indent => '    ').join("\n")}
+
+  Finally, some commands act on a cue, but don't take a VALUE and don't
+  respond:
+
+    #{Qcmd.wrapped_text(Qcmd::Commands::CUE_NO_RESPONSE.sort.join(', '), :indent => '    ').join("\n")}
+
+]
+        end
+      end
+
     end
   end
 end

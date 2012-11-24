@@ -2,6 +2,9 @@ require 'socket'
 require 'osc-ruby'
 
 require 'qcmd/version'
+
+require 'qcmd/plaintext'
+require 'qcmd/commands'
 require 'qcmd/input_completer'
 
 require 'qcmd/core_ext/array'
@@ -9,7 +12,6 @@ require 'qcmd/core_ext/osc/message'
 require 'qcmd/core_ext/osc/stopping_server'
 
 module Qcmd
-  # Your code goes here...
   autoload :Handler, 'qcmd/handler'
   autoload :Server, 'qcmd/server'
   autoload :Context, 'qcmd/context'
@@ -18,8 +20,6 @@ module Qcmd
   autoload :Machine, 'qcmd/machine'
   autoload :Network, 'qcmd/network'
   autoload :QLab, 'qcmd/qlab'
-  autoload :Plaintext, 'qcmd/plaintext'
-  autoload :Commands, 'qcmd/commands'
   autoload :VERSION, 'qcmd/version'
 
   class << self

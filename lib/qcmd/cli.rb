@@ -152,6 +152,16 @@ module Qcmd
           Qcmd.context.print_workspace_list
         end
 
+      when 'help'
+        help_command = args.shift
+
+        if help_command.nil?
+          Qcmd::Commands::Help.print_all_commands
+          # print help according to current context
+        else
+          # print command specific help
+        end
+
       when 'cues'
         if !Qcmd.context.workspace_connected?
           failed_workspace_command message
@@ -183,7 +193,7 @@ module Qcmd
           print
           print "  > cue NUMBER COMMAND ARGUMENTS"
           print
-          print_wrapped("available cue commands are: #{Qcmd::InputCompleter::ReservedCueWords.join(', ')}")
+          print_wrapped("available cue commands are: #{Qcmd::Commands::ALL_CUE_COMMANDS.join(', ')}")
         elsif cue_action.nil?
           server.send_workspace_command("cue/#{ cue_number }")
         else

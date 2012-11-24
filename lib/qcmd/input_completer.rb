@@ -4,23 +4,12 @@ module Qcmd
   module InputCompleter
     # the commands listed here should represent every possible legal command
     ReservedWords = %w[
-      connect exit quit workspace workspaces disconnect
+      connect exit quit workspace workspaces disconnect help
     ]
 
-    ReservedWorkspaceWords = %w[
-      cueLists selectedCues runningCues runningOrPausedCues thump
-      go stop pause resume reset panic disconnect
-    ]
+    ReservedWorkspaceWords = Qcmd::Commands::ALL_WORKSPACE_COMMANDS
 
-    ReservedCueWords = %w[
-      cue stop pause resume load preview reset panic loadAt uniqueID
-      hasFileTargets hasCueTargets allowsEditingDuration isLoaded isRunning
-      isPaused isBroken preWaitElapsed actionElapsed postWaitElapsed
-      percentPreWaitElapsed percentActionElapsed percentPostWaitElapsed
-      type number name notes cueTargetNumber cueTargetId preWait duration
-      postWait continueMode flagged armed colorName basics children
-      sliderLevel sliderLevels
-    ]
+    ReservedCueWords = Qcmd::Commands::ALL_CUE_COMMANDS
 
     CompletionProc = Proc.new {|input|
       # puts "input: #{ input }"
