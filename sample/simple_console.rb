@@ -127,7 +127,7 @@ server = OSC::Server.new receive_port
 
 # server listens and forwards responses to the forked process
 server.add_method %r[/reply] do |osc_message|
-  data = JSON.parse(osc_message.to_a.first)
+  data = JSON.parse(osc_message.to_a.first)['data']
 
   begin
     writer.puts JSON.pretty_generate(data)
