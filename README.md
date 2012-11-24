@@ -4,6 +4,9 @@
 QLab 3's new OSC interface. `qcmd` should be useable from any machine on
 the same local network as the QLab workspace you intend to work with.
 
+This project is OS X only and has been tested against Ruby 1.8.7-p358 (OS X
+10.8 default), Ruby 1.8.7 REE 2012.02, and Ruby 1.9.3-p327.
+
 **This project should be considered experimental. DO NOT RUN SHOWS WITH
 IT.**
 
@@ -15,6 +18,7 @@ Install this gem to your machine by running the following command:
     $ sudo gem install qcmd
 
 That should do ya.
+
 
 ## Starting the `qcmd` console.
 
@@ -121,6 +125,7 @@ An example session might look like this:
 
     > exit
     exiting...
+
 
 ## Contributing
 
