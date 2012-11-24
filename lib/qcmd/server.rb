@@ -1,8 +1,4 @@
 require 'osc-ruby'
-begin
-  require 'ruby-debug'
-rescue LoadError
-end
 
 require 'json'
 
