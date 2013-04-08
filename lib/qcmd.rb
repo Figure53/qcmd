@@ -12,6 +12,8 @@ require 'qcmd/core_ext/osc/message'
 require 'qcmd/core_ext/osc/stopping_server'
 
 module Qcmd
+  autoload :Configuration, 'qcmd/configuration'
+  autoload :History, 'qcmd/history'
   autoload :Handler, 'qcmd/handler'
   autoload :Server, 'qcmd/server'
   autoload :Context, 'qcmd/context'
@@ -21,6 +23,8 @@ module Qcmd
   autoload :Network, 'qcmd/network'
   autoload :QLab, 'qcmd/qlab'
   autoload :VERSION, 'qcmd/version'
+
+  # on launch
 
   class << self
     include Qcmd::Plaintext
@@ -61,6 +65,9 @@ module Qcmd
     end
 
     def debug message
+      # always write to log
+      Qcmd::Configuration.log.puts message
+
       log(message) if log_level == :debug
     end
 

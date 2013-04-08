@@ -88,7 +88,7 @@ module Qcmd
           naps += 1
           sleep 0.1
         end
-      rescue TimeoutError => ex
+      rescue TimeoutError
         Qcmd.log "[error: reply timeout]"
         # clear expecting reply item, assume it will never arrive
         @sent_messages_expecting_reply.shift

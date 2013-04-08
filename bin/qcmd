@@ -27,6 +27,8 @@ end
 
 # browse local network and check for qlab + qlab workspaces
 
+Qcmd::History.load
+
 if !opts[:machine_given]
   Qcmd.ascii_qlab
   Qcmd.print

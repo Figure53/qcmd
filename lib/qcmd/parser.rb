@@ -3,6 +3,7 @@ module Qcmd
     class << self
       # adapted from https://gist.github.com/612311
       # by Aaron Gough
+
       def extract_string_literals( string )
         string_literal_pattern = /"([^"\\]|\\.)*"/
         string_replacement_token = "___+++STRING_LITERAL+++___"

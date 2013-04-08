@@ -1,6 +1,7 @@
 require 'dnssd'
 
 module Qcmd
+  # Browse the LAN and find open and running QLab instances.
   class Network
     BROWSE_TIMEOUT = 2
 
@@ -10,6 +11,7 @@ module Qcmd
       # browse can be used alone to populate the machines list
       def browse
         self.machines = []
+
         self.browse_thread = Thread.start do
           DNSSD.browse! '_qlab._udp' do |b|
             DNSSD.resolve b.name, b.type, b.domain do |r|
@@ -52,6 +54,10 @@ module Qcmd
 
       def find machine_name
         machines.find {|m| m.name == machine_name}
+      end
+
+      def find_by_index idx
+        machines[idx] if idx < machines.size
       end
 
       def names

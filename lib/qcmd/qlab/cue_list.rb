@@ -13,6 +13,7 @@ module Qcmd
     #          "armed": number
     #      }
     #  ]
+    #
     #  If the cue is a group, the dictionary will include an array of cue dictionaries for all children in the group:
     #
     #  [
@@ -43,7 +44,7 @@ module Qcmd
     #    \"name\":\"Main Cue List\",
     #    \"armed\":true}]
 
-    class Cue
+    class CueList
       attr_accessor :data
 
       def initialize options={}
@@ -55,7 +56,7 @@ module Qcmd
       end
 
       def name
-        data['name']
+        data['listName']
       end
 
       def number

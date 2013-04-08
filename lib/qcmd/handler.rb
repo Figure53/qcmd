@@ -3,7 +3,7 @@ module Qcmd
     include Qcmd::Plaintext
 
     def handle reply
-      Qcmd.debug "(handling #{ reply })"
+      Qcmd.debug "(handling #{ reply.address } #{ reply.data.inspect })"
 
       case reply.address
       when %r[/workspaces]
@@ -27,19 +27,11 @@ module Qcmd
         Qcmd.debug "(received cueLists)"
 
         # load global cue list
-        Qcmd.context.workspace.cues = cues = reply.data.map {|cue_list|
-          cue_list['cues'].map {|cue| Qcmd::QLab::Cue.new(cue)}
-        }.compact.flatten
+        Qcmd.context.workspace.cue_lists = reply.data.map {|cue_list| Qcmd::QLab::CueList.new(cue_list)}
 
       when %r[/(selectedCues|runningCues|runningOrPausedCues)]
-        cues = reply.data.map {|cue|
-          cues = [Qcmd::QLab::Cue.new(cue)]
-
-          if cue['cues']
-            cues << cue['cues'].map {|cue| Qcmd::QLab::Cue.new(cue)}
-          end
-
-          cues
+        cues = reply.data.map {|cue_list|
+          unpack_cues(cue_list)
         }.compact.flatten
 
         title = case reply.address
@@ -82,6 +74,15 @@ module Qcmd
       else
         Qcmd.debug "(unrecognized message from QLab, cannot handle #{ reply.address })"
       end
+    end
+
+    private
+
+    # return a possibly nested list of cues
+    def unpack_cues cuelist
+      cuelist['cues'].map {|cue|
+        Qcmd::QLab::Cue.new(cue)
+      }
     end
   end
 end

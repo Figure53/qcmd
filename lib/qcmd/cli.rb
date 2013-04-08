@@ -14,12 +14,17 @@ module Qcmd
       new options
     end
 
+    def get_prompt prefix=nil
+      clock = Time.now.strftime "%H:%M"
+      "#{clock} #{prefix.to_s}\n> "
+    end
+
     def initialize options={}
       Qcmd.debug "(launching with options: #{options.inspect})"
       # start local listening port
       Qcmd.context = Qcmd::Context.new
 
-      self.prompt = '> '
+      self.prompt = get_prompt
 
       if options[:machine_given]
         Qcmd.debug "(autoconnecting to #{ options[:machine] })"
@@ -64,12 +69,21 @@ module Qcmd
 
       server.load_workspaces
 
-      self.prompt = "#{ machine.name }> "
+      self.prompt = get_prompt "[#{ machine.name }]"
     end
 
     def connect_to_machine_by_name machine_name, passcode
       if machine = Qcmd::Network.find(machine_name)
         print "connecting to machine: #{machine_name}"
+        connect machine, passcode
+      else
+        print 'sorry, that machine could not be found'
+      end
+    end
+
+    def connect_to_machine_by_index machine_idx, passcode
+      if machine = Qcmd::Network.find_by_index(machine_idx)
+        print "connecting to machine: #{machine.name}"
         connect machine, passcode
       else
         print 'sorry, that machine could not be found'
@@ -90,16 +104,16 @@ module Qcmd
       Qcmd.context.workspace = workspace
 
       server.connect_to_workspace workspace
-      if Qcmd.context.workspace_connected? && Qcmd.context.workspace.cues
+      if Qcmd.context.workspace_connected? && Qcmd.context.workspace.cue_lists
         print "loaded #{pluralize Qcmd.context.workspace.cues.size, 'cue'}"
-        self.prompt = "#{ Qcmd.context.machine.name }:#{ workspace.name }> "
+        self.prompt = get_prompt "[#{ Qcmd.context.machine.name }] [#{ workspace.name }]"
       end
     end
 
     def reset
       Qcmd.context.reset
       server.stop
-      self.prompt = "> "
+      self.prompt = get_prompt
     end
 
     def start
@@ -112,10 +126,14 @@ module Qcmd
           next
         end
 
+        # save all commands to log
+        Qcmd::History.push(message)
+
         handle_message(message)
       end
     end
 
+    # the actual command line interface interactor
     def handle_message message
       args    = Qcmd::Parser.parse(message)
       command = args.shift
@@ -126,13 +144,18 @@ module Qcmd
         exit 0
 
       when 'connect'
-        Qcmd.debug "(connect command received args: #{ args.inspect })"
+        Qcmd.debug "(connect command received args: #{ args.inspect } :: #{ args.map {|a| a.class.to_s}.inspect})"
 
-        machine_name = args.shift
-        passcode     = args.shift
+        machine_ident = args.shift
+        passcode      = args.shift
 
-        connect_to_machine_by_name machine_name, passcode
-
+        if machine_ident.is_a?(Fixnum)
+          # machine "index" will be given with a 1-indexed value instead of the
+          # stored 0-indexed value.
+          connect_to_machine_by_index machine_ident - 1, passcode
+        else
+          connect_to_machine_by_name machine_ident, passcode
+        end
       when 'disconnect'
         reset
         Qcmd::Network.browse_and_display
@@ -164,23 +187,28 @@ module Qcmd
 
       when 'cues'
         if !Qcmd.context.workspace_connected?
-          failed_workspace_command message
+          handle_failed_workspace_command message
           return
         end
 
         # reload cues
         server.load_cues
 
-        print
-        print centered_text(" Cues ", '-')
-        table ['Number', 'Id', 'Name', 'Type'], Qcmd.context.workspace.cues.map {|cue|
-          [cue.number, cue.id, cue.name, cue.type]
-        }
-        print
+        Qcmd.context.workspace.cue_lists.each do |cue_list|
+          print
+          print centered_text(" Cues ", '-')
+          printable_cues = []
+
+          add_cues_to_list cue_list, printable_cues, 0
+
+          table ['Number', 'Id', 'Name', 'Type'], printable_cues
+
+          print
+        end
 
       when 'cue', 'c'
         if !Qcmd.context.workspace_connected?
-          failed_workspace_command message
+          handle_failed_workspace_command message
           return
         end
 
@@ -245,6 +273,19 @@ module Qcmd
       print_wrapped(%[the command, "#{ command }" can't be processed yet. you must
                       first connect to a machine and a workspace
                       before issuing other commands.])
+    end
+
+    def add_cues_to_list cue, list, level
+      cue.cues.each {|_c|
+        name = _c.name
+
+        if level > 0
+          name += " " + ("-" * level) + "|"
+        end
+
+        list << [_c.number, _c.id, name, _c.type]
+        add_cues_to_list(_c, list, level + 1) if _c.has_cues?
+      }
     end
   end
 end
