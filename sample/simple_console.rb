@@ -81,7 +81,7 @@ pid = fork do
     exit if /^(q(uit)?|exit)/i =~ address
 
     # "sanitize" the given address
-    if %r[^/] != address
+    if %r[^/] !~ address
       if address == '>'
         # pasted previous command line entry
         address = args.shift
