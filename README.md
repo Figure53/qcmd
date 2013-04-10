@@ -33,7 +33,7 @@ send commands to cues and the workspace.
 wondering what you can do from the console.
 
 Run `qcmd` with the -v option to get full debugging output. Use the main
-project repository (https://github.com/abachman/qcmd) to report any issues.
+project repository (https://github.com/Figure53/qcmd) to report any issues.
 
 An example session might look like this:
 
