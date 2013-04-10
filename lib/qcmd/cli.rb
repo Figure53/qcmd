@@ -27,13 +27,15 @@ module Qcmd
       self.prompt = get_prompt
 
       if options[:machine_given]
-        Qcmd.debug "(autoconnecting to #{ options[:machine] })"
+        Qcmd.debug "(autoconnecting to machine #{ options[:machine] })"
 
         Qcmd.while_quiet do
           connect_to_machine_by_name options[:machine], options[:machine_passcode]
         end
 
         if options[:workspace_given]
+          Qcmd.debug "(autoconnecting to workspace #{ options[:machine] })"
+
           Qcmd.while_quiet do
             connect_to_workspace_by_name options[:workspace], options[:workspace_passcode]
           end
@@ -129,7 +131,11 @@ module Qcmd
         # save all commands to log
         Qcmd::History.push(message)
 
-        handle_message(message)
+        begin
+          handle_message(message)
+        rescue Qcmd::Parser::ParserException => ex
+          print "command parser couldn't handle the last command: #{ ex.message }"
+        end
       end
     end
 
@@ -260,7 +266,7 @@ module Qcmd
               # might be legit OSC command, try sending
               server.send_command(command, *args)
             else
-              print "unrecognized command: #{ command }"
+              print_wrapped("Unrecognized command: '#{ command }'. Try one of these: #{ Qcmd::InputCompleter::ReservedWorkspaceWords.join(', ') }")
             end
           end
         else
@@ -270,7 +276,7 @@ module Qcmd
     end
 
     def handle_failed_workspace_command command
-      print_wrapped(%[the command, "#{ command }" can't be processed yet. you must
+      print_wrapped(%[The command, "#{ command }" can't be processed yet. you must
                       first connect to a machine and a workspace
                       before issuing other commands.])
     end

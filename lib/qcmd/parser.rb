@@ -79,7 +79,7 @@ module Qcmd
           converted_tokens << eval(t) and next if( is_string_literal?(t) )
           # If we haven't recognized the token by now we need to raise
           # an exception as there are no more rules left to check against!
-          raise Exception, "Unrecognized token: #{t}"
+          raise ParserException, "Unrecognized token: #{t}"
         end
         return converted_tokens
       end
@@ -92,5 +92,7 @@ module Qcmd
         return token_array
       end
     end
+
+    class ParserException < Exception; end
   end
 end
