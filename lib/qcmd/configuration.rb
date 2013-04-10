@@ -28,18 +28,19 @@ module Qcmd
       end
 
       def config_file
-        user = Etc.getlogin
-        File.join(Dir.home(user), ".qcmd.yml")
+        File.join(Dir.home(current_user), ".qcmd.yml")
       end
 
       def history_file
-        user = Etc.getlogin
-        File.join(Dir.home(user), ".qcmd-history.log")
+        File.join(Dir.home(current_user), ".qcmd-history.log")
       end
 
       def log_file
-        user = Etc.getlogin
-        File.join(Dir.home(user), ".qcmd.log")
+        File.join(Dir.home(current_user), ".qcmd.log")
+      end
+
+      def current_user
+        @current_user ||= ::Etc.getlogin
       end
     end
   end
