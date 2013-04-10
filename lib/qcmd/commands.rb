@@ -12,14 +12,14 @@ module Qcmd
     MACHINE_RESPONSE = %w(workspaces)
 
     WORKSPACE_RESPONSE = %w(
-      cueLists selectedCues runningCues runningOrPausedCues thump
+      cueLists selectedCues runningCues runningOrPausedCues thump new
     )
 
     WORKSPACE_NO_RESPONSE = %w(
-      go stop pause resume reset panic
+      go stop pause resume reset panic select
     )
 
-    ALL_WORKSPACE_COMMANDS = [WORKSPACE_RESPONSE + WORKSPACE_NO_RESPONSE]
+    ALL_WORKSPACE_COMMANDS = WORKSPACE_RESPONSE + WORKSPACE_NO_RESPONSE
 
     # commands that take no args and do not respond
     CUE_NO_RESPONSE = %w(
