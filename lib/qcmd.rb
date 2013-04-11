@@ -11,7 +11,6 @@ require 'qcmd/input_completer'
 
 require 'qcmd/core_ext/array'
 require 'qcmd/core_ext/osc/message'
-require 'qcmd/core_ext/osc/stopping_server'
 require 'qcmd/core_ext/osc/tcp_client'
 
 module Qcmd
