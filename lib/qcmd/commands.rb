@@ -83,6 +83,68 @@ module Qcmd
       valuesForKeys
     )
 
+    GROUP_CUE = %w(
+      playbackPositionId
+    )
+
+    AUDIO_CUE = %w(
+      doFade
+      doPitchShift
+      endTime
+      infiniteLoop
+      level
+      patch
+      playCount
+      rate
+      sliderLevel
+      sliderLevels
+      startTime
+    )
+
+    FADE_CUE = %w(
+      level
+      sliderLevel
+      sliderLevels
+    )
+
+    MIC_CUE = %w(
+      level
+      sliderLevel
+      sliderLevels
+    )
+
+    VIDEO_CUE = %w(
+      cueSize
+      doEffect
+      doFade
+      doPitchShift
+      effect
+      effectSet
+      endTime
+      fullScreen
+      infiniteLoop
+      layer
+      level
+      opacity
+      patch
+      playCount
+      preserveAspectRatio
+      quaternion
+      rate
+      scaleX
+      scaleY
+      sliderLevel
+      sliderLevels
+      startTime
+      surfaceID
+      surfaceList
+      surfaceSize
+      translationX
+      translationY
+    )
+
+    ALL_CUES = (CUE + GROUP_CUE + AUDIO_CUE + FADE_CUE + MIC_CUE + VIDEO_CUE).uniq.sort
+
     module Help
       class << self
 
@@ -136,6 +198,29 @@ cue NUMBER COMMAND [VALUE [ANOTHER_VALUE ...]]
   COMMAND can be one of:
 
     #{Qcmd.wrapped_text(Qcmd::Commands::CUE.sort.join(', '), :indent => '    ').join("\n")}
+
+  specific types of cues may have different cues available. Here's the commands
+  available for different types of cues:
+
+  Group Cue:
+
+    #{Qcmd.wrapped_text(Qcmd::Commands::GROUP_CUE.sort.join(', '), :indent => '    ').join("\n")}
+
+  Audio Cue:
+
+    #{Qcmd.wrapped_text(Qcmd::Commands::AUDIO_CUE.sort.join(', '), :indent => '    ').join("\n")}
+
+  Fade Cue:
+
+    #{Qcmd.wrapped_text(Qcmd::Commands::FADE_CUE.sort.join(', '), :indent => '    ').join("\n")}
+
+  Mic Cue:
+
+    #{Qcmd.wrapped_text(Qcmd::Commands::MIC_CUE.sort.join(', '), :indent => '    ').join("\n")}
+
+  Video Cue:
+
+    #{Qcmd.wrapped_text(Qcmd::Commands::VIDEO_CUE.sort.join(', '), :indent => '    ').join("\n")}
 
 ]
         end
