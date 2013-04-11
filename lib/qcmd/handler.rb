@@ -57,7 +57,10 @@ module Qcmd
           print result
         else
           case reply.address
-          when %r[/basics]
+          when %r[/valuesForKeys]
+            print reply.to_s
+            print result.inspect
+
             keys = result.keys.sort
             table(['Field Name', 'Value'], keys.map {|key|
               [key, result[key]]

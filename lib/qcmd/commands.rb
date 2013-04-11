@@ -38,7 +38,6 @@ module Qcmd
       actionElapsed
       allowsEditingDuration
       armed
-      basics
       children
       colorName
       continueMode

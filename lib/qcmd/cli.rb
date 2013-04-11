@@ -264,7 +264,7 @@ module Qcmd
           return
         end
 
-        qlab_client.send(OSC::Message.new('/workspaces'))
+        send_command 'workspaces'
 
       when 'workspace'
         workspace_command = args.shift
