@@ -36,6 +36,8 @@ module Qcmd
             print %[sent command "#{ options[:command] }"]
             exit 0
           end
+        elsif Qcmd.context.machine.workspaces.size == 1 && !Qcmd.context.machine.workspaces.first.passcode?
+          connect_to_workspace_by_name Qcmd.context.machine.workspaces.first.name, nil
         end
       end
 
