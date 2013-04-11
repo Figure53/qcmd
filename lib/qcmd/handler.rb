@@ -33,22 +33,29 @@ module Qcmd
         Qcmd.context.workspace.cue_lists = reply.data.map {|cue_list| Qcmd::QLab::CueList.new(cue_list)}
 
       when %r[/(selectedCues|runningCues|runningOrPausedCues)]
-        cues = reply.data.map {|cue_list|
-          unpack_cues(cue_list)
-        }.compact.flatten
+        Qcmd.debug "(received cue list from #{reply.address})"
 
-        title = case reply.address
-                when /selectedCues/;        "Selected Cues"
-                when /runningCues/;         "Running Cues"
-                when /runningOrPausedCues/; "Running or Paused Cues"
-                end
+        if reply.data
+          cues = reply.data.map {|cue| Qcmd::QLab::Cue.new(cue)}
 
-        print
-        print centered_text(" #{title} ", '-')
-        table(['Number', 'Id', 'Name', 'Type'], cues.map {|cue|
-          [cue.number, cue.id, cue.name, cue.type]
-        })
-        print
+          if cues.size > 0
+            title = case reply.address
+                    when /selectedCues/;        "Selected Cues"
+                    when /runningCues/;         "Running Cues"
+                    when /runningOrPausedCues/; "Running or Paused Cues"
+                    end
+
+            print
+            print centered_text(" #{title} ", '-')
+            table(['Number', 'Id', 'Name', 'Type'], cues.map {|cue|
+              [cue.number, cue.id, cue.name, cue.type]
+            })
+            print
+          else
+            print "no cues found"
+          end
+        end
+
 
       when %r[/(cue|cue_id)/[^/]+/[a-zA-Z]+]
         # properties, just print reply data
@@ -80,15 +87,6 @@ module Qcmd
       else
         Qcmd.debug "(unrecognized message from QLab, cannot handle #{ reply.address })"
       end
-    end
-
-    private
-
-    # return a possibly nested list of cues
-    def unpack_cues cuelist
-      cuelist['cues'].map {|cue|
-        Qcmd::QLab::Cue.new(cue)
-      }
     end
   end
 end
