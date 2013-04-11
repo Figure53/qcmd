@@ -6,7 +6,7 @@ module Qcmd
     def handle message
       reply = QLab::Reply.new(message)
 
-      Qcmd.debug "(handling #{ reply.address } #{ reply.data.inspect })"
+      Qcmd.debug "(handling #{ reply.to_s })"
 
       case reply.address
       when %r[/workspaces]
@@ -73,10 +73,16 @@ module Qcmd
               [key, result[key]]
             })
           else
-            begin
-              print JSON.pretty_generate(result)
-            rescue JSON::GeneratorError
-              print result.to_s
+            if result
+              begin
+                print JSON.pretty_generate(result)
+              rescue JSON::GeneratorError
+                print result.to_s
+              end
+            else
+              if !reply.status.nil?
+                print reply.status
+              end
             end
           end
         end
@@ -86,6 +92,10 @@ module Qcmd
 
       else
         Qcmd.debug "(unrecognized message from QLab, cannot handle #{ reply.address })"
+
+        if !reply.status.nil?
+          Qcmd.print reply.status
+        end
       end
     end
   end
