@@ -8,23 +8,15 @@ module Qcmd
       end
 
       def config
-        @config ||= YAML.load(File.open(config_file))[current_room]
+        @config ||= YAML.load(File.open(config_file))
       end
 
       def history
-        @history ||= begin
-                       f = File.new(history_file, 'a')
-                       f.sync = true
-                       f
-                     end
+        @history ||= open_file_for_appending(history_file)
       end
 
       def log
-        @log ||= begin
-                   f = File.new(log_file, 'a')
-                   f.sync = true
-                   f
-                 end
+        @log ||= open_file_for_appending(log_file)
       end
 
       def config_file
@@ -41,6 +33,12 @@ module Qcmd
 
       def home_directory
         @home_directory ||= File.expand_path('~')
+      end
+
+      def open_file_for_appending(fname)
+         f = File.new(fname, 'a')
+         f.sync = true
+         f
       end
     end
   end

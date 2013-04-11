@@ -4,7 +4,11 @@ module Qcmd
       attr_accessor :commands
 
       def load
-        lines = File.new(Qcmd::Configuration.history_file, 'r').readlines
+        if File.exists?(Qcmd::Configuration.history_file)
+          lines = File.new(Qcmd::Configuration.history_file, 'r').readlines
+        else
+          lines = []
+        end
 
         if lines
           if lines.length > 100
