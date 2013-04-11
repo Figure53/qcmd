@@ -18,7 +18,7 @@ module Qcmd
       end
 
       def to_s
-        "<Qcmd::Qlab::Reply address:'#{address}' data:#{data.inspect}>"
+        "<Qcmd::Qlab::Reply address:'#{address}' status:'#{status}' data:#{data.inspect}>"
       end
     end
   end

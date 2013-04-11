@@ -7,26 +7,82 @@ module Qcmd
     # *_RESPONSE lists are commands that expect responses
     #
 
-    MACHINE = %w(connect workspaces)
+    MACHINE = %w(
+      alwaysReply
+      connect
+      workingDirectory
+      workspaces
+    )
 
     WORKSPACE = %w(
-      cueLists selectedCues runningCues runningOrPausedCues thump new
-      go stop pause resume reset panic select
+      cueLists
+      go
+      hardStop
+      new
+      panic
+      pause
+      reset
+      resume
+      runningCues
+      runningOrPausedCues
+      select
+      selectedCues
+      stop
+      thump
+      toggleFullScreen
+      updates
     )
 
     # commands that take no args and do not respond
     CUE = %w(
-      start stop pause resume load preview reset panic
+      actionElapsed
+      allowsEditingDuration
+      armed
+      basics
+      children
+      colorName
+      continueMode
+      cueTargetId
+      cueTargetNumber
+      defaultName
+      displayName
+      duration
+      fileTarget
+      flagged
+      hardStop
+      hasCueTargets
+      hasFileTargets
+      isBroken
+      isLoaded
+      isPaused
+      isRunning
+      listName
+      load
       loadAt
-      uniqueID hasFileTargets hasCueTargets allowsEditingDuration isLoaded
-      isRunning isPaused isBroken preWaitElapsed actionElapsed
-      postWaitElapsed percentPreWaitElapsed percentActionElapsed
-      percentPostWaitElapsed type sliderLevels
-      basics children
-      number name notes cueTargetNumber cueTargetId preWait duration
-      postWait continueMode flagged armed colorName
+      name
+      notes
+      number
+      panic
+      pause
+      percentActionElapsed
+      percentPostWaitElapsed
+      percentPreWaitElapsed
+      postWait
+      postWaitElapsed
+      preWait
+      preWaitElapsed
+      preview
+      reset
+      resume
       sliderLevel
-    ).sort
+      sliderLevels
+      start
+      stop
+      togglePause
+      type
+      uniqueID
+      valuesForKeys
+    )
 
     module Help
       class << self
