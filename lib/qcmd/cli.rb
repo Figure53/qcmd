@@ -103,10 +103,22 @@ module Qcmd
     end
 
     def connect_to_workspace_by_name workspace_name, passcode
-      if workspace = Qcmd.context.machine.find_workspace(workspace_name)
-        workspace.passcode = passcode
-        print "connecting to workspace: #{workspace_name}"
-        use_workspace workspace
+      if Qcmd.context.machine_connected?
+        if workspace = Qcmd.context.machine.find_workspace(workspace_name)
+          workspace.passcode = passcode
+          print "connecting to workspace: #{workspace_name}"
+          use_workspace workspace
+        else
+          print "that workspace doesn't seem to exist. try one of the following:"
+          Qcmd.context.machine.workspaces.each do |ws|
+            print %[  "#{ ws.name }"]
+          end
+        end
+      else
+        print %[you can't connect to a workspace until you've connected to a machine. try one of the following:]
+        Qcmd::Network.names.each do |name|
+          print %[  #{ name }]
+        end
       end
     end
 
