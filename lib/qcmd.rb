@@ -68,7 +68,7 @@ module Qcmd
 
     def debug message
       # always write to log
-      Qcmd::Configuration.log.puts message
+      Qcmd::Configuration.log.puts "[%s] %s" % [Time.now.strftime('%T'), message]
 
       log(message) if log_level == :debug
     end
