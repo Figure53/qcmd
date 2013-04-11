@@ -1,6 +1,8 @@
 require 'socket'
 require 'osc-ruby'
 
+require 'json'
+
 require 'qcmd/version'
 
 require 'qcmd/plaintext'
