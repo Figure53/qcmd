@@ -16,16 +16,26 @@ module OSC
     CHAR_ESC_END_ENC = [0334].pack('C') # ESC ESC_END means END data byte
     CHAR_ESC_ESC_ENC = [0335].pack('C') # ESC ESC_ESC means ESC data byte
 
-    def initialize host, port
+    def initialize host, port, handler=nil
       @host = host
       @port = port
+      @handler = handler
       @so   = TCPSocket.new host, port
+    end
+
+    def close
+      @so.close unless closed?
+    end
+
+    def closed?
+      @so.closed?
     end
 
     def send_char c
       @so.send [c].pack('C'), 0
     end
 
+    # send an OSC::Message
     def send msg
       enc_msg = msg.encode
 
@@ -46,8 +56,17 @@ module OSC
 
       send_char CHAR_END
 
-      if block_given?
-        yield response
+      if block_given? || @handler
+        messages = response
+        if !messages.nil?
+          messages.each do |message|
+            if block_given?
+              yield message
+            else
+              @handler.handle message
+            end
+          end
+        end
       end
     end
 

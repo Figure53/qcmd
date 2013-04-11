@@ -2,7 +2,10 @@ module Qcmd
   class Handler
     include Qcmd::Plaintext
 
-    def handle reply
+    # Handle OSC response message from QLab
+    def handle message
+      reply = QLab::Reply.new(message)
+
       Qcmd.debug "(handling #{ reply.address } #{ reply.data.inspect })"
 
       case reply.address
