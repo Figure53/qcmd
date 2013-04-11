@@ -11,13 +11,7 @@ module Qcmd
         end
 
         if lines
-          if lines.length > 100
-            first = -100
-          else
-            first = -(lines.length)
-          end
-
-          lines[first..-1].reverse.each {|hist|
+          lines.reverse[0..100].reverse.each {|hist|
             Readline::HISTORY.push(hist)
           }
         end
