@@ -56,6 +56,10 @@ module Qcmd
         prefix << "[#{ Qcmd.context.workspace.name }]"
       end
 
+      if Qcmd.context.cue_connected?
+        prefix << "[#{ Qcmd.context.cue.name }]"
+      end
+
       ["#{clock} #{prefix.join(' ')}", "> "]
     end
 
@@ -117,9 +121,14 @@ module Qcmd
           end
         end
       else
-        print %[you can't connect to a workspace until you've connected to a machine. try one of the following:]
-        Qcmd::Network.names.each do |name|
-          print %[  #{ name }]
+        print %["#{ workspace_name }" is unavailable, you can't connect to a workspace until you've connected to a machine. ]
+        if Qcmd::Network.names.size > 0
+          print "try one of the following:"
+          Qcmd::Network.names.each do |name|
+            print %[  #{ name }]
+          end
+        else
+          print "there are no QLab machines on this network :("
         end
       end
     end
@@ -215,7 +224,7 @@ module Qcmd
           connect_to_workspace_by_name workspace_name, passcode
         else
           print "No workspace name given. The following workspaces are available:"
-          Qcmd.context.print_workspace_list
+          qlab_client.handler.print_workspace_list
         end
 
       when 'help'
@@ -296,19 +305,17 @@ module Qcmd
         end
 
       else
-        if Qcmd.context.workspace_connected?
-          if Qcmd::InputCompleter::ReservedWorkspaceWords.include?(command)
-            send_workspace_command(command, *args)
-          else
-            if %r[/] =~ command
-              # might be legit OSC command, try sending
-              send_command(command, *args)
-            else
-              print_wrapped("Unrecognized command: '#{ command }'. Try one of these: #{ Qcmd::InputCompleter::ReservedWorkspaceWords.join(', ') }")
-            end
-          end
+        if Qcmd.context.cue_connected? && Qcmd::InputCompleter::ReservedCueWords.include?(command)
+          send_cue_command Qcmd.context.cue.number, command, *args
+        elsif Qcmd.context.workspace_connected? && Qcmd::InputCompleter::ReservedWorkspaceWords.include?(command)
+          send_workspace_command(command, *args)
         else
-          handle_failed_workspace_command cli_input
+          if %r[/] =~ command
+            # might be legit OSC command, try sending
+            send_command(command, *args)
+          else
+            print_wrapped("Unrecognized command: '#{ command }'. Try one of these: #{ Qcmd::InputCompleter::ReservedWorkspaceWords.join(', ') }")
+          end
         end
       end
     end

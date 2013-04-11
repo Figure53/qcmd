@@ -13,7 +13,7 @@ module Qcmd
         Qcmd.context.machine.workspaces = reply.data.map {|ws| Qcmd::QLab::Workspace.new(ws)}
 
         unless Qcmd.quiet?
-          Qcmd.context.print_workspace_list
+          print_workspace_list
         end
 
       when %r[/workspace/[^/]+/connect]
@@ -56,10 +56,29 @@ module Qcmd
           end
         end
 
+      when %r[/(cue|cue_id)/([^/]+)/[a-zA-Z]+]
+        cue_tag = $1
+        cue_identifier = $2
 
-      when %r[/(cue|cue_id)/[^/]+/[a-zA-Z]+]
+        # isolate cue
+        if Qcmd.context.workspace.has_cues?
+          _cue = Qcmd.context.workspace.cues.find {|cue|
+            if cue_tag == 'cue'
+              cue.number == cue_identifier.to_s
+            elsif cue_tag == 'cue_id'
+              cue.id == cue_identifier.to_s
+            end
+          }
+
+          if _cue
+            Qcmd.context.cue = _cue
+            Qcmd.context.cue_connected = true
+          end
+        end
+
         # properties, just print reply data
         result = reply.data
+
         if result.is_a?(String) || result.is_a?(Numeric)
           print result
         else
@@ -97,6 +116,24 @@ module Qcmd
           Qcmd.print reply.status
         end
       end
+    end
+
+    def print_workspace_list
+      if Qcmd.context.machine.workspaces.nil? || Qcmd.context.machine.workspaces.empty?
+        Qcmd.print "there are no workspaces! you're gonna have a bad time :("
+        return
+      end
+
+      Qcmd.print Qcmd.centered_text(" Workspaces ", '-')
+      Qcmd.print
+
+      Qcmd.context.machine.workspaces.each_with_index do |ws, n|
+        Qcmd.print "#{ n + 1 }. #{ ws.name }#{ ws.passcode? ? ' [PROTECTED]' : ''}"
+      end
+
+      Qcmd.print
+      Qcmd.print_wrapped('Type `use "WORKSPACE_NAME" PASSCODE` to load a workspace. Passcode is optional.')
+      Qcmd.print
     end
   end
 end

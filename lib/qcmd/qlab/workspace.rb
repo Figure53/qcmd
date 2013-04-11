@@ -31,6 +31,10 @@ module Qcmd
         end.flatten.compact
       end
 
+      def has_cues?
+        cues.size > 0
+      end
+
       private
 
       def load_cues parent_cue, cues

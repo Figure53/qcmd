@@ -9,7 +9,7 @@ module Qcmd
 
     ReservedWorkspaceWords = Qcmd::Commands::WORKSPACE
 
-    ReservedCueWords = Qcmd::Commands::CUE
+    ReservedCueWords = Qcmd::Commands::ALL_CUES
 
     CompletionProc = Proc.new {|input|
       # puts "input: #{ input }"

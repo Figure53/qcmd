@@ -1,10 +1,11 @@
 module Qcmd
   class Context
-    attr_accessor :machine, :workspace, :workspace_connected
+    attr_accessor :machine, :workspace, :workspace_connected, :cue, :cue_connected
 
     def reset
       disconnect_machine
       disconnect_workspace
+      disconnect_cue
     end
 
     def disconnect_machine
@@ -16,6 +17,11 @@ module Qcmd
       self.workspace_connected = false
     end
 
+    def disconnect_cue
+      self.cue = nil
+      self.cue_connected = false
+    end
+
     def machine_connected?
       !machine.nil?
     end
@@ -24,27 +30,20 @@ module Qcmd
       !!workspace_connected
     end
 
+    def cue_connected?
+      !!cue_connected
+    end
+
     def connection_state
       if !machine_connected?
         :none
       elsif !workspace_connected?
         :machine
-      else
+      elsif !cue_connected?
         :workspace
+      else
+        :cue
       end
-    end
-
-    def print_workspace_list
-      Qcmd.print Qcmd.centered_text(" Workspaces ", '-')
-      Qcmd.print
-
-      machine.workspaces.each_with_index do |ws, n|
-        Qcmd.print "#{ n + 1 }. #{ ws.name }#{ ws.passcode? ? ' [PROTECTED]' : ''}"
-      end
-
-      Qcmd.print
-      Qcmd.print_wrapped('Type `use "WORKSPACE_NAME" PASSCODE` to load a workspace. Passcode is optional.')
-      Qcmd.print
     end
   end
 end
