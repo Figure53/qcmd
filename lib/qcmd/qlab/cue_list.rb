@@ -47,8 +47,8 @@ module Qcmd
     class CueList
       attr_accessor :data
 
-      def initialize options={}
-        self.data = options
+      def initialize data
+        self.data = data
       end
 
       def id
