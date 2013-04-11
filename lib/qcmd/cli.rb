@@ -1,36 +1,27 @@
-require 'qcmd/server'
-
 require 'readline'
-
 require 'osc-ruby'
 
 module Qcmd
   class CLI
     include Qcmd::Plaintext
 
-    attr_accessor :server, :prompt
+    attr_accessor :qlab_client, :prompt
 
     def self.launch options={}
       new options
     end
 
-    def get_prompt prefix=nil
-      clock = Time.now.strftime "%H:%M"
-      "#{clock} #{prefix.to_s}\n> "
-    end
-
     def initialize options={}
       Qcmd.debug "(launching with options: #{options.inspect})"
+
       # start local listening port
       Qcmd.context = Qcmd::Context.new
-
-      self.prompt = get_prompt
 
       if options[:machine_given]
         Qcmd.debug "(autoconnecting to machine #{ options[:machine] })"
 
         Qcmd.while_quiet do
-          connect_to_machine_by_name options[:machine], options[:machine_passcode]
+          connect_to_machine_by_name options[:machine]
         end
 
         if options[:workspace_given]
@@ -41,7 +32,7 @@ module Qcmd
           end
 
           if options[:command_given]
-            handle_message options[:command]
+            handle_input options[:command]
             print %[sent command "#{ options[:command] }"]
             exit 0
           end
@@ -51,7 +42,22 @@ module Qcmd
       start
     end
 
-    def connect machine, passcode
+    def get_prompt
+      clock = Time.now.strftime "%H:%M"
+      prefix = []
+
+      if Qcmd.context.machine_connected?
+        prefix << "[#{ Qcmd.context.machine.name }]"
+      end
+
+      if Qcmd.context.workspace_connected?
+        prefix << "[#{ Qcmd.context.workspace.name }]"
+      end
+
+      ["#{clock} #{prefix.join(' ')}", "> "]
+    end
+
+    def connect machine
       if machine.nil?
         print "A valid machine is needed to connect!"
         return
@@ -60,33 +66,37 @@ module Qcmd
       Qcmd.context.machine = machine
       Qcmd.context.workspace = nil
 
-      if server.nil?
-        # set client connection and start listening port
-        self.server = Qcmd::Server.new :receive => 53001
-      else
-        # change client connection
-        server.connect_to_client
+      # in case this is a reconnection
+      self.qlab_client.close if self.qlab_client
+
+      # get an open connection
+      self.qlab_client = OSC::TCPClient.new(machine.address, machine.port, Qcmd::Handler.new)
+
+      # tell QLab to always reply to messages
+      send_command('alwaysReply', 1) do |response|
+        if response.nil?
+          print "FAILED TO CONNECT TO QLAB MACHINE #{ machine.name }"
+        elsif response.status == 'ok'
+          print "connected to #{ machine.name }"
+        end
       end
-      server.run
 
-      server.load_workspaces
-
-      self.prompt = get_prompt "[#{ machine.name }]"
+      send_command 'workspaces'
     end
 
-    def connect_to_machine_by_name machine_name, passcode
+    def connect_to_machine_by_name machine_name
       if machine = Qcmd::Network.find(machine_name)
         print "connecting to machine: #{machine_name}"
-        connect machine, passcode
+        connect machine
       else
         print 'sorry, that machine could not be found'
       end
     end
 
-    def connect_to_machine_by_index machine_idx, passcode
+    def connect_to_machine_by_index machine_idx
       if machine = Qcmd::Network.find_by_index(machine_idx)
         print "connecting to machine: #{machine.name}"
-        connect machine, passcode
+        connect machine
       else
         print 'sorry, that machine could not be found'
       end
@@ -102,37 +112,50 @@ module Qcmd
 
     def use_workspace workspace
       Qcmd.debug %[(connecting to workspace: "#{workspace.name}")]
+
       # set workspace in context. Will unset later if there's a problem.
       Qcmd.context.workspace = workspace
 
-      server.connect_to_workspace workspace
-      if Qcmd.context.workspace_connected? && Qcmd.context.workspace.cue_lists
-        print "loaded #{pluralize Qcmd.context.workspace.cues.size, 'cue'}"
-        self.prompt = get_prompt "[#{ Qcmd.context.machine.name }] [#{ workspace.name }]"
+      # send connect message to QLab to make sure subsequent messages target it
+      if workspace.passcode?
+        send_command "workspace/#{workspace.id}/connect", "%04i" % workspace.passcode
+      else
+        send_command "workspace/#{workspace.id}/connect"
+      end
+
+      # if it worked, load cues automatically
+      if Qcmd.context.workspace_connected?
+        load_cues
+
+        if Qcmd.context.workspace.cue_lists
+          print "loaded #{pluralize Qcmd.context.workspace.cues.size, 'cue'}"
+        end
       end
     end
 
     def reset
       Qcmd.context.reset
-      server.stop
-      self.prompt = get_prompt
+      qlab_client.close
     end
 
     def start
       loop do
         # blocks the whole Ruby VM
-        message = Readline.readline(prompt, true)
+        prefix, char = get_prompt
 
-        if message.nil? || message.size == 0
-          Qcmd.debug "(got: #{ message.inspect })"
+        Qcmd.print prefix
+        cli_input = Readline.readline(char, true)
+
+        if cli_input.nil? || cli_input.size == 0
+          Qcmd.debug "(got: #{ cli_input.inspect })"
           next
         end
 
         # save all commands to log
-        Qcmd::History.push(message)
+        Qcmd::History.push(cli_input)
 
         begin
-          handle_message(message)
+          handle_input(cli_input)
         rescue Qcmd::Parser::ParserException => ex
           print "command parser couldn't handle the last command: #{ ex.message }"
         end
@@ -140,8 +163,8 @@ module Qcmd
     end
 
     # the actual command line interface interactor
-    def handle_message message
-      args    = Qcmd::Parser.parse(message)
+    def handle_input cli_input
+      args    = Qcmd::Parser.parse(cli_input)
       command = args.shift
 
       case command
@@ -153,15 +176,15 @@ module Qcmd
         Qcmd.debug "(connect command received args: #{ args.inspect } :: #{ args.map {|a| a.class.to_s}.inspect})"
 
         machine_ident = args.shift
-        passcode      = args.shift
 
         if machine_ident.is_a?(Fixnum)
           # machine "index" will be given with a 1-indexed value instead of the
           # stored 0-indexed value.
-          connect_to_machine_by_index machine_ident - 1, passcode
+          connect_to_machine_by_index machine_ident - 1
         else
-          connect_to_machine_by_name machine_ident, passcode
+          connect_to_machine_by_name machine_ident
         end
+
       when 'disconnect'
         reset
         Qcmd::Network.browse_and_display
@@ -185,20 +208,20 @@ module Qcmd
         help_command = args.shift
 
         if help_command.nil?
-          Qcmd::Commands::Help.print_all_commands
           # print help according to current context
+          Qcmd::Commands::Help.print_all_commands
         else
           # print command specific help
         end
 
       when 'cues'
         if !Qcmd.context.workspace_connected?
-          handle_failed_workspace_command message
+          handle_failed_workspace_command cli_input
           return
         end
 
         # reload cues
-        server.load_cues
+        load_cues
 
         Qcmd.context.workspace.cue_lists.each do |cue_list|
           print
@@ -214,7 +237,7 @@ module Qcmd
 
       when 'cue', 'c'
         if !Qcmd.context.workspace_connected?
-          handle_failed_workspace_command message
+          handle_failed_workspace_command cli_input
           return
         end
 
@@ -227,11 +250,12 @@ module Qcmd
           print
           print "  > cue NUMBER COMMAND ARGUMENTS"
           print
-          print_wrapped("available cue commands are: #{Qcmd::Commands::ALL_CUE_COMMANDS.join(', ')}")
+          print_wrapped("available cue commands are: #{Qcmd::Commands::CUE.join(', ')}")
+          print
         elsif cue_action.nil?
-          server.send_workspace_command("cue/#{ cue_number }")
+          send_workspace_command("cue/#{ cue_number }")
         else
-          server.send_cue_command(cue_number, cue_action, *args)
+          send_cue_command(cue_number, cue_action, *args)
         end
 
       when 'workspaces'
@@ -240,13 +264,13 @@ module Qcmd
           return
         end
 
-        server.load_workspaces
+        qlab_client.send(OSC::Message.new('/workspaces'))
 
       when 'workspace'
         workspace_command = args.shift
 
         if !Qcmd.context.workspace_connected?
-          handle_failed_workspace_command message
+          handle_failed_workspace_command cli_input
           return
         end
 
@@ -254,23 +278,23 @@ module Qcmd
           print_wrapped("no workspace command given. available workspace commands
                          are: #{Qcmd::InputCompleter::ReservedWorkspaceWords.join(', ')}")
         else
-          server.send_workspace_command(workspace_command, *args)
+          send_workspace_command(workspace_command, *args)
         end
 
       else
         if Qcmd.context.workspace_connected?
           if Qcmd::InputCompleter::ReservedWorkspaceWords.include?(command)
-            server.send_workspace_command(command, *args)
+            send_workspace_command(command, *args)
           else
             if %r[/] =~ command
               # might be legit OSC command, try sending
-              server.send_command(command, *args)
+              send_command(command, *args)
             else
               print_wrapped("Unrecognized command: '#{ command }'. Try one of these: #{ Qcmd::InputCompleter::ReservedWorkspaceWords.join(', ') }")
             end
           end
         else
-          handle_failed_workspace_command message
+          handle_failed_workspace_command cli_input
         end
       end
     end
@@ -292,6 +316,52 @@ module Qcmd
         list << [_c.number, _c.id, name, _c.type]
         add_cues_to_list(_c, list, level + 1) if _c.has_cues?
       }
+    end
+
+    ### communication actions
+    private
+
+    def send_command command, *args
+      options = args.extract_options!
+
+      Qcmd.debug "(building command from command, args, options: #{ command.inspect }, #{ args.inspect }, #{ options.inspect })"
+
+      # make sure command is valid OSC Address
+      if %r[^/] =~ command
+        address = command
+      else
+        address = "/#{ command }"
+      end
+
+      osc_message = OSC::Message.new address, *args
+
+      Qcmd.debug "(sending osc message #{ osc_message.address } #{osc_message.has_arguments? ? 'with' : 'without'} args)"
+
+      if block_given?
+        # use given response handler, pass it response as a QLab Reply
+        qlab_client.send osc_message do |response|
+          yield QLab::Reply.new(response)
+        end
+      else
+        # rely on default response handler
+        qlab_client.send(osc_message)
+      end
+    end
+
+    def send_workspace_command _command, *args
+      command = "workspace/#{ Qcmd.context.workspace.id }/#{ _command }"
+      send_command(command, *args)
+    end
+
+    def send_cue_command number, action, *args
+      command = "cue/#{ number }/#{ action }"
+      send_workspace_command(command, *args)
+    end
+
+    ## QLab commands
+
+    def load_cues
+      send_workspace_command 'cueLists'
     end
   end
 end

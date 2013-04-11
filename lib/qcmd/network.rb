@@ -13,7 +13,7 @@ module Qcmd
         self.machines = []
 
         self.browse_thread = Thread.start do
-          DNSSD.browse! '_qlab._udp' do |b|
+          DNSSD.browse! '_qlab._tcp.' do |b|
             DNSSD.resolve b.name, b.type, b.domain do |r|
               self.machines << Qcmd::Machine.new(b.name, r.target, r.port)
             end

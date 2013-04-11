@@ -7,9 +7,9 @@ module Qcmd
       connect exit quit workspace workspaces disconnect help
     ]
 
-    ReservedWorkspaceWords = Qcmd::Commands::ALL_WORKSPACE_COMMANDS
+    ReservedWorkspaceWords = Qcmd::Commands::WORKSPACE
 
-    ReservedCueWords = Qcmd::Commands::ALL_CUE_COMMANDS
+    ReservedCueWords = Qcmd::Commands::CUE
 
     CompletionProc = Proc.new {|input|
       # puts "input: #{ input }"

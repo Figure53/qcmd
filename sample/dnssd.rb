@@ -9,7 +9,7 @@ def row label, record
   puts "%-12s%s" % [label, record.send(label)]
 end
 
-browser = DNSSD.browse '_qlab._udp' do |b|
+def do_browse_on_service(b)
   DNSSD.resolve b.name, b.type, b.domain do |r|
     puts '*' * 40
     puts "FOUND QLAB:"
@@ -30,7 +30,24 @@ browser = DNSSD.browse '_qlab._udp' do |b|
   end
 end
 
-trap 'INT' do browser.stop; exit end
-trap 'TERM' do browser.stop; exit end
+browsers = []
+
+#browsers.push(DNSSD.browse('_qlab._udp.') do |b|
+#  do_browse_on_service(b)
+#end)
+
+browsers.push(DNSSD.browse('_qlab._tcp.') do |b|
+  do_browse_on_service(b)
+end)
+
+trap 'INT' do
+  browsers.map(&:stop);
+  exit
+end
+
+trap 'TERM' do
+  browsers.map(&:stop);
+  exit
+end
 
 sleep

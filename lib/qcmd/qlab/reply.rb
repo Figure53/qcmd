@@ -13,8 +13,8 @@ module Qcmd
         @data ||= json['data']
       end
 
-      def is_cue_command?
-        Qcmd::Commands.is_cue_command?(address)
+      def status
+        @status ||= json['status']
       end
 
       def to_s
