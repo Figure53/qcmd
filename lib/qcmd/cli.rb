@@ -223,6 +223,15 @@ module Qcmd
           Qcmd::Network.browse_and_display
         end
 
+      when '..'
+        if Qcmd.context.cue_connected?
+          Qcmd.context.disconnect_cue
+        elsif Qcmd.context.workspace_connected?
+          Qcmd.context.disconnect_workspace
+        else
+          reset
+        end
+
       when 'use'
         Qcmd.debug "(use command received args: #{ args.inspect })"
 

@@ -60,13 +60,13 @@ module Qcmd
         cue_tag = $1
         cue_identifier = $2
 
-        # isolate cue
+        # isolate and fixate on cue so that subsequent messages go to the cue
         if Qcmd.context.workspace.has_cues?
           _cue = Qcmd.context.workspace.cues.find {|cue|
             if cue_tag == 'cue'
-              cue.number == cue_identifier.to_s
+              cue.number.to_s == cue_identifier.to_s
             elsif cue_tag == 'cue_id'
-              cue.id == cue_identifier.to_s
+              cue.id.to_s == cue_identifier.to_s
             end
           }
 
@@ -79,9 +79,11 @@ module Qcmd
         # properties, just print reply data
         result = reply.data
 
+        # simple response
         if result.is_a?(String) || result.is_a?(Numeric)
           print result
         else
+          # handle specific reponses
           case reply.address
           when %r[/valuesForKeys]
             print reply.to_s
