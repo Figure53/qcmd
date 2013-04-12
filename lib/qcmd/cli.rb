@@ -209,8 +209,19 @@ module Qcmd
         end
 
       when 'disconnect'
-        reset
-        Qcmd::Network.browse_and_display
+        disconnect_what = args.shift
+
+        if disconnect_what == 'workspace'
+          Qcmd.context.disconnect_cue
+          Qcmd.context.disconnect_workspace
+
+          qlab_client.handler.print_workspace_list
+        elsif disconnect_what == 'cue'
+          Qcmd.context.disconnect_cue
+        else
+          reset
+          Qcmd::Network.browse_and_display
+        end
 
       when 'use'
         Qcmd.debug "(use command received args: #{ args.inspect })"
@@ -258,27 +269,33 @@ module Qcmd
           print
         end
 
-      when 'cue', 'c'
+      when /^(cue|cue_id)$/
+        id_field = $1
+
         if !Qcmd.context.workspace_connected?
           handle_failed_workspace_command cli_input
           return
         end
 
         # pull off cue number
-        cue_number = args.shift
-        cue_action = args.shift
+        cue_identifier = args.shift
+        cue_action     = args.shift
 
-        if cue_number.nil?
+        if cue_identifier.nil?
           print "no cue command given. cue commands should be in the form:"
           print
           print "  > cue NUMBER COMMAND ARGUMENTS"
           print
+          print "or"
+          print
+          print "  > cue_id ID COMMAND ARGUMENTS"
+          print
           print_wrapped("available cue commands are: #{Qcmd::Commands::CUE.join(', ')}")
           print
         elsif cue_action.nil?
-          send_workspace_command("cue/#{ cue_number }")
+          send_workspace_command("#{ id_field }/#{ cue_identifier }")
         else
-          send_cue_command(cue_number, cue_action, *args)
+          send_workspace_command("#{ id_field }/#{ cue_identifier }/#{ cue_action }", *args)
         end
 
       when 'workspaces'
@@ -306,10 +323,18 @@ module Qcmd
 
       else
         if Qcmd.context.cue_connected? && Qcmd::InputCompleter::ReservedCueWords.include?(command)
-          send_cue_command Qcmd.context.cue.number, command, *args
+          # prepend the given command with a cue address
+          if Qcmd.context.cue.number.nil? || Qcmd.context.cue.number.size == 0
+            command = "cue_id/#{ Qcmd.context.cue.id }/#{ command }"
+          else
+            command = "cue/#{ Qcmd.context.cue.number }/#{ command }"
+          end
+
+          send_workspace_command(command, *args)
         elsif Qcmd.context.workspace_connected? && Qcmd::InputCompleter::ReservedWorkspaceWords.include?(command)
           send_workspace_command(command, *args)
         else
+          # failure modes?
           if %r[/] =~ command
             # might be legit OSC command, try sending
             send_command(command, *args)
@@ -372,11 +397,6 @@ module Qcmd
     def send_workspace_command _command, *args
       command = "workspace/#{ Qcmd.context.workspace.id }/#{ _command }"
       send_command(command, *args)
-    end
-
-    def send_cue_command number, action, *args
-      command = "cue/#{ number }/#{ action }"
-      send_workspace_command(command, *args)
     end
 
     ## QLab commands
