@@ -86,8 +86,8 @@ module Qcmd
           # handle specific reponses
           case reply.address
           when %r[/valuesForKeys]
-            print reply.to_s
-            print result.inspect
+            Qcmd.debug "[valuesForKeys] received reply #{ reply.to_s }"
+            Qcmd.debug "[valuesForKeys] with result #{ result.inspect }"
 
             keys = result.keys.sort
             table(['Field Name', 'Value'], keys.map {|key|
@@ -101,7 +101,7 @@ module Qcmd
                 print result.to_s
               end
             else
-              if !reply.status.nil?
+              if !reply.status.nil? && reply.status != 'ok'
                 print reply.status
               end
             end
@@ -114,7 +114,7 @@ module Qcmd
       else
         Qcmd.debug "(unrecognized message from QLab, cannot handle #{ reply.address })"
 
-        if !reply.status.nil?
+        if !reply.status.nil? && reply.status != 'ok'
           Qcmd.print reply.status
         end
       end
