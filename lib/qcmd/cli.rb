@@ -348,7 +348,16 @@ module Qcmd
             # might be legit OSC command, try sending
             send_command(command, *args)
           else
-            print_wrapped("Unrecognized command: '#{ command }'. Try one of these: #{ Qcmd::InputCompleter::ReservedWorkspaceWords.join(', ') }")
+            if Qcmd.context.cue_connected?
+              print_wrapped("Unrecognized command: '#{ command }'. Try one of these cue commands: #{ Qcmd::InputCompleter::ReservedCueWords.join(', ') }")
+              print 'or disconnect from the cue with ..'
+            elsif Qcmd.context.workspace_connected?
+              print_wrapped("Unrecognized command: '#{ command }'. Try one of these workspace commands: #{ Qcmd::InputCompleter::ReservedWorkspaceWords.join(', ') }")
+            elsif Qcmd.context.machine_connected?
+              send_command(command, *args)
+            else
+              print 'you must connect to a machine before sending commands'
+            end
           end
         end
       end
