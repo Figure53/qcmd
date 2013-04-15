@@ -307,6 +307,25 @@ module Qcmd
           send_workspace_command("#{ id_field }/#{ cue_identifier }/#{ cue_action }", *args)
         end
 
+      when /copy-([a-zA-Z]+)/
+        cue_copy_from = args.shift
+        cue_copy_to   = args.shift
+        field = $1
+
+        send_command "cue/#{ cue_copy_from }/#{ field }" do |response|
+          if (response.data.is_a?(String) ||
+              response.data.is_a?(Fixnum) ||
+              response.data.is_a?(TrueClass) ||
+              response.data.is_a?(FalseClass))
+
+            send_command "cue/#{ cue_copy_to }/#{ field }", response.data do |paste_response|
+              if paste_response.status == 'ok'
+                print %[copied #{ field } "#{ response.data }" from #{ cue_copy_from } to #{ cue_copy_to }]
+              end
+            end
+          end
+        end
+
       when 'workspaces'
         if !Qcmd.context.machine_connected?
           print 'cannot load workspaces until you are connected to a machine'
