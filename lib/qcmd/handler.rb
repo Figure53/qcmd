@@ -36,7 +36,7 @@ module Qcmd
       when %r[/(selectedCues|runningCues|runningOrPausedCues)]
         Qcmd.debug "(received cue list from #{reply.address})"
 
-        if reply.data
+        if reply.has_data?
           cues = reply.data.map {|cue| Qcmd::QLab::Cue.new(cue)}
 
           if cues.size > 0
@@ -95,13 +95,19 @@ module Qcmd
               [key, result[key]]
             })
           else
-            if result
-              begin
-                print JSON.pretty_generate(result)
-              rescue JSON::GeneratorError
+            if !result.nil?
+              if result.is_a?(Hash) || result.is_a?(Array)
+                begin
+                  print JSON.pretty_generate(result)
+                rescue JSON::GeneratorError
+                  Qcmd.debug "([Handler#handle /cue] failed to JSON parse data: #{ result.inspect })"
+                  print result.to_s
+                end
+              else
                 print result.to_s
               end
             else
+              Qcmd.debug "([Handler#handle /cue] response has no data: #{ reply.to_s })"
               if !reply.status.nil? && reply.status != 'ok'
                 print reply.status
               end
