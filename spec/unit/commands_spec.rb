@@ -11,12 +11,21 @@ def test_log msg=''
   puts msg
 end
 
+class DeadHandler
+  def handle response
+    # do nothing :P
+  end
+end
+
 describe Qcmd::Commands do
-  describe 'cue commands should not raise errors' do
+  describe 'when sending messages' do
     before do
       Qcmd.context = Qcmd::Context.new
       Qcmd.context.machine = machine = Qcmd::Machine.new('test machine', 'localhost', 53000)
-      @sender = OSC::TCPClient.new machine.address, machine.port
+      @sender = OSC::TCPClient.new machine.address, machine.port, DeadHandler.new
+
+      # make sure alwaysReply is turned on
+      @sender.send(OSC::Message.new('/alwaysReply', 1))
 
       @thread = nil
     end
@@ -40,9 +49,10 @@ describe Qcmd::Commands do
             # should be able to instantiate all OSC message reponses as QLab replies
             @sender.send(osc_message) do |response|
               reply = Qcmd::QLab::Reply.new(response)
-              test_log "[machine command] #{ reply.address } got #{ reply.to_s }"
+              # test_log "[machine command] #{ reply.address } got #{ reply.to_s }"
             end
 
+            test_log reply.address
             reply.should_not be_nil
           }.to_not raise_error
         end
@@ -51,6 +61,11 @@ describe Qcmd::Commands do
 
     describe 'workspace commands' do
       before do
+        # make sure alwaysReply is turned on
+        @sender.send(OSC::Message.new('/alwaysReply', 1)) do |response|
+          # do nothing with it :D
+        end
+
         # load workspaces
         osc_message = OSC::Message.new '/workspaces'
         @sender.send(osc_message) do |response|
@@ -68,14 +83,28 @@ describe Qcmd::Commands do
           expect {
             osc_message = OSC::Message.new "/workspace/#{workspace.id}/#{ workspace_command }"
 
+            osc_response = nil
             reply = nil
 
-            @sender.send(osc_message) do |response|
-              reply = Qcmd::QLab::Reply.new(response)
-              test_log "[workspace command] #{ reply.address } got #{ reply.to_s }"
+            begin
+              @sender.send(osc_message) do |response|
+                osc_response = response
+                reply = Qcmd::QLab::Reply.new(response)
+                # test_log "[workspace command] #{ reply.address } got #{ reply.to_s }"
+              end
+            rescue => ex
+              puts "sender fail: #{ ex.message }"
+              raise
             end
 
-            reply.should_not be_nil
+            begin
+              test_log reply.address
+              reply.should_not(be_nil)
+            rescue => ex
+              puts "reply access fail '#{ ex.message }' on response #{ osc_response.inspect }"
+              raise
+            end
+
           }.to_not raise_error
         end
 
@@ -94,7 +123,7 @@ describe Qcmd::Commands do
 
           @sender.send(osc_message) do |response|
             reply = Qcmd::QLab::Reply.new(response)
-            @cue = Qcmd::QLab::Cue.new(reply.data.first['cues'].first)
+            @cue  = Qcmd::QLab::Cue.new(reply.data.first['cues'].first)
           end
         end
 
@@ -107,14 +136,21 @@ describe Qcmd::Commands do
             expect {
               osc_message = OSC::Message.new "/workspace/#{workspace.id}/cue/#{ @cue.number }/#{ cue_command }"
 
+              osc_response = nil
               reply = nil
 
               @sender.send(osc_message) do |response|
+                osc_response = response
                 reply = Qcmd::QLab::Reply.new(response)
-                test_log "[cue command] #{ reply.address } got #{ reply.to_s }"
               end
 
-              reply.should_not be_nil
+              begin
+                test_log reply.address
+                reply.should_not be_nil
+              rescue => ex
+                puts "reply access fail '#{ ex.message }' on response #{ osc_response.inspect }"
+                raise
+              end
 
             }.to_not raise_error
           end

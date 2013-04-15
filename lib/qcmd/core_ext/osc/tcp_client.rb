@@ -72,17 +72,29 @@ module OSC
 
     def receive_raw
       received = 0
+      messages = []
       buffer   = []
       failed   = false
+      received_any = false
 
       loop do
         begin
           # get a character from the socket, fail if nothing is available
           c = @so.recv_nonblock(1)
+
+          received_any = true
+
           case c
           when CHAR_END_ENC
             if received > 0
-              return buffer.join
+              # add SLIP encoded message to list
+              messages << buffer.join
+
+              # reset state and keep reading from the port until there's
+              # nothing left
+              buffer.clear
+              received = 0
+              failed = false
             end
           when CHAR_ESC_ENC
             # get next character, blocking is okay
@@ -101,26 +113,33 @@ module OSC
             buffer << c
           end
         rescue Errno::EAGAIN, Errno::EWOULDBLOCK
+          # If any messages have been received, assume sender is done sending.
+          if failed || received_any
+            break
+          end
+
           # wait one second to see if the socket might become readable (and a
           # response forthcoming). normal usage is send + wait for response,
           # we have to give QLab a reasonable amount of time in which to respond.
+
           IO.select([@so], [], [], 1)
-
-          if !failed
-            failed = true
-            retry
-          end
-
-          break
+          failed = true
+          retry
         end
       end
 
-      nil
+      if messages.size > 0
+        messages
+      else
+        nil
+      end
     end
 
     def response
-      if recv = receive_raw
-        OSCPacket.messages_from_network(recv)
+      if received_messages = receive_raw
+        received_messages.map do |message|
+          OSCPacket.messages_from_network(message)
+        end.flatten
       else
         nil
       end
