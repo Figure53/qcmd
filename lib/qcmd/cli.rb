@@ -312,15 +312,41 @@ module Qcmd
         cue_copy_to   = args.shift
         field = $1
 
-        send_command "cue/#{ cue_copy_from }/#{ field }" do |response|
-          if (response.data.is_a?(String) ||
-              response.data.is_a?(Fixnum) ||
-              response.data.is_a?(TrueClass) ||
-              response.data.is_a?(FalseClass))
+        protected_fields = %w(
+          allowsEditingDuration
+          defaultName
+          displayName
+          hasCueTargets
+          hasCueTargets
+          hasFileTargets
+          hasFileTargets
+          isBroken
+          isLoaded
+          isPaused
+          isRunning
+          listName
+          number
+          percentActionElapsed
+          percentPostWaitElapsed
+          percentPreWaitElapsed
+          preWaitElapsed
+          type
+          uniqueID
+        )
 
-            send_command "cue/#{ cue_copy_to }/#{ field }", response.data do |paste_response|
-              if paste_response.status == 'ok'
-                print %[copied #{ field } "#{ response.data }" from #{ cue_copy_from } to #{ cue_copy_to }]
+        if protected_fields.include?(field)
+          print "the \"#{ field }\" field is not copyable"
+        else
+          send_command "cue/#{ cue_copy_from }/#{ field }" do |response|
+            if (response.data.is_a?(String) ||
+                response.data.is_a?(Fixnum) ||
+                response.data.is_a?(TrueClass) ||
+                response.data.is_a?(FalseClass))
+
+              send_command "cue/#{ cue_copy_to }/#{ field }", response.data do |paste_response|
+                if paste_response.status == 'ok'
+                  print %[copied #{ field } "#{ response.data }" from #{ cue_copy_from } to #{ cue_copy_to }]
+                end
               end
             end
           end
