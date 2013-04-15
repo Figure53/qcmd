@@ -1,14 +1,17 @@
+# communicate!
 require 'socket'
 require 'osc-ruby'
 
+# data from QLab
 require 'json'
 
-require 'qcmd/version'
+# parser
+require 'sexpistol'
 
+require 'qcmd/version'
 require 'qcmd/plaintext'
 require 'qcmd/commands'
 require 'qcmd/input_completer'
-
 require 'qcmd/core_ext/array'
 require 'qcmd/core_ext/osc/message'
 require 'qcmd/core_ext/osc/tcp_client'
@@ -68,6 +71,7 @@ module Qcmd
 
     def debug message
       # always write to log
+
       Qcmd::Configuration.log.puts "[%s] %s" % [Time.now.strftime('%T'), message]
 
       log(message) if log_level == :debug

@@ -188,7 +188,7 @@ module Qcmd
     # the actual command line interface interactor
     def handle_input cli_input
       args    = Qcmd::Parser.parse(cli_input)
-      command = args.shift
+      command = args.shift.to_s
 
       case command
       when 'exit', 'quit', 'q'
