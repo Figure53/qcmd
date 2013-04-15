@@ -404,6 +404,7 @@ module Qcmd
       if block_given?
         # use given response handler, pass it response as a QLab Reply
         qlab_client.send osc_message do |response|
+          Qcmd.debug "([CLI.send_command] converting OSC::Message to QLab::Reply)"
           yield QLab::Reply.new(response)
         end
       else

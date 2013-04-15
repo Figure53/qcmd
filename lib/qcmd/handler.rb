@@ -4,6 +4,7 @@ module Qcmd
 
     # Handle OSC response message from QLab
     def handle message
+      Qcmd.debug "([Handler#handle] converting OSC::Message to QLab::Reply)"
       reply = QLab::Reply.new(message)
 
       Qcmd.debug "(handling #{ reply.to_s })"
