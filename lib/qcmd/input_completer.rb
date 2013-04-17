@@ -11,6 +11,15 @@ module Qcmd
 
     ReservedCueWords = Qcmd::Commands::ALL_CUES
 
+    def self.add_commands commands
+      ReservedWords.push(*commands)
+      ReservedWords.uniq!
+    end
+
+    def self.add_command command
+      add_commands([command])
+    end
+
     CompletionProc = Proc.new {|input|
       # puts "input: #{ input }"
 
@@ -40,6 +49,7 @@ module Qcmd
         quoted_names = machine_names.map {|mn| %["#{mn}"]}
         names = (quoted_names + machine_names).grep(matcher)
         names = quote_if_necessary(names)
+
         # unquote
         commands = commands + names
       end

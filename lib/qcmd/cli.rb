@@ -40,6 +40,9 @@ module Qcmd
         end
       end
 
+      # add aliases to input completer
+      InputCompleter.add_commands aliases.keys
+
       start
     end
 
@@ -52,7 +55,71 @@ module Qcmd
     end
 
     def aliases
-      []
+      @aliases ||= {
+        'n' => 'cue $1 name $2',
+        'copy-name' => 'cue $2 name (cue $1 name)',
+        'zero-out' => (1..48).map {|n| "(cue $1 sliderLevel #{n} 0)"}.join(' '),
+        'copy-sliders' => (1..48).map {|n| "(cue $1 sliderLevel #{n} 0)"}.join(' '),
+      }
+    end
+
+    def alias_arg_matcher
+      /\$(\d+)/
+    end
+
+    def add_alias name, expression
+      aliases[name] = Parser.parser.to_sexp(expression)
+      InputCompleter.add_command name
+    end
+
+    def replace_args alias_expression, original_expression
+      Qcmd.debug "([CLI replace_args] populating #{ alias_expression.inspect } with #{ original_expression.inspect })"
+
+      alias_expression.map do |arg|
+        if arg.is_a?(Array)
+          replace_args(arg, original_expression)
+        elsif (arg.is_a?(Symbol) || arg.is_a?(String)) && alias_arg_matcher =~ arg.to_s
+          while alias_arg_matcher  =~ arg.to_s
+            arg_idx = $1.to_i
+            arg_val = original_expression[arg_idx]
+
+            Qcmd.debug "([CLI replace_args] found $#{ arg_idx }, replacing with #{ arg_val.inspect })"
+
+            arg = arg.to_s.sub("$#{ arg_idx }", arg_val.to_s)
+          end
+
+          arg
+        else
+          arg
+        end
+      end
+    end
+
+    def expand_alias key, expression
+      Qcmd.debug "([CLI expand_alias] using alias of #{ key } with #{ expression.inspect })"
+
+      new_command = aliases[key]
+
+      # observe alias arity
+      argument_placeholders = new_command.scan(alias_arg_matcher).uniq.map {|placeholder|
+        placeholder[0].sub(/$\$/, '').to_i
+      }
+
+      if argument_placeholders.size > 0
+        arguments_expected = argument_placeholders.max
+
+        # because expression is alias + arguments, the expression's size should
+        # be at least arguments_expected + 1
+        if expression.size <= arguments_expected
+          print "This custom command expects at least #{ arguments_expected } arguments."
+          return
+        end
+      end
+
+      new_command = Parser.parse(new_command)
+      new_command = replace_args(new_command, expression)
+
+      new_command
     end
 
     def get_prompt
@@ -215,7 +282,13 @@ module Qcmd
         Qcmd::History.push(cli_input)
 
         begin
-          handle_input(cli_input)
+          if /;/ =~ cli_input
+            cli_input.split(';').each do |sub_input|
+              handle_input Qcmd::Parser.parse(sub_input)
+            end
+          else
+            handle_input Qcmd::Parser.parse(cli_input)
+          end
         rescue => ex
           print "command parser couldn't handle the last command: #{ ex.message }"
           print ex.backtrace
@@ -224,8 +297,7 @@ module Qcmd
     end
 
     # the actual command line interface interactor
-    def handle_input cli_input
-      args    = Qcmd::Parser.parse(cli_input)
+    def handle_input args
       command = args[0].to_s
 
       case command
@@ -397,54 +469,91 @@ module Qcmd
           end
         end
 
-      when /copy-([a-zA-Z]+)/
-        cue_copy_from = args[1]
-        cue_copy_to   = args[2]
-        field = $1
+      when 'aliases'
+        print centered_text(" Available Custom Commands ", '-')
+        print
 
-        protected_fields = %w(
-          allowsEditingDuration
-          defaultName
-          displayName
-          hasCueTargets
-          hasCueTargets
-          hasFileTargets
-          hasFileTargets
-          isBroken
-          isLoaded
-          isPaused
-          isRunning
-          listName
-          number
-          percentActionElapsed
-          percentPostWaitElapsed
-          percentPreWaitElapsed
-          preWaitElapsed
-          type
-          uniqueID
-        )
-
-        if protected_fields.include?(field)
-          print "the \"#{ field }\" field is not copyable"
-        else
-          send_command "cue/#{ cue_copy_from }/#{ field }" do |response|
-            if (response.data.is_a?(String) ||
-                response.data.is_a?(Fixnum) ||
-                response.data.is_a?(TrueClass) ||
-                response.data.is_a?(FalseClass))
-
-              send_command "cue/#{ cue_copy_to }/#{ field }", response.data do |paste_response|
-                if paste_response.status == 'ok'
-                  print %[copied #{ field } "#{ response.data }" from #{ cue_copy_from } to #{ cue_copy_to }]
-                end
-              end
-            end
-          end
+        aliases.each do |(key, val)|
+          print key
+          print '    ' + word_wrap(val, :indent => '    ', :preserve_whitespace => true).join("\n")
+          print
         end
 
+      when 'alias'
+        new_alias = add_alias args[1].to_s, args[2]
+        print %[Added alias for "#{ args[1] }": #{ new_alias }]
+
+        # when /copy-([a-zA-Z]+)/
+        #   cue_copy_from = args[1]
+        #   cue_copy_to   = args[2]
+        #   field = $1
+
+        #   protected_fields = %w(
+        #     allowsEditingDuration
+        #     defaultName
+        #     displayName
+        #     hasCueTargets
+        #     hasCueTargets
+        #     hasFileTargets
+        #     hasFileTargets
+        #     isBroken
+        #     isLoaded
+        #     isPaused
+        #     isRunning
+        #     listName
+        #     number
+        #     percentActionElapsed
+        #     percentPostWaitElapsed
+        #     percentPreWaitElapsed
+        #     preWaitElapsed
+        #     type
+        #     uniqueID
+        #   )
+
+        #   if protected_fields.include?(field)
+        #     print "the \"#{ field }\" field is not copyable"
+        #   else
+        #     send_command "cue/#{ cue_copy_from }/#{ field }" do |response|
+        #       if (response.data.is_a?(String) ||
+        #           response.data.is_a?(Fixnum) ||
+        #           response.data.is_a?(TrueClass) ||
+        #           response.data.is_a?(FalseClass))
+
+        #         send_command "cue/#{ cue_copy_to }/#{ field }", response.data do |paste_response|
+        #           if paste_response.status == 'ok'
+        #             print %[copied #{ field } "#{ response.data }" from #{ cue_copy_from } to #{ cue_copy_to }]
+        #           end
+        #         end
+        #       end
+        #     end
+        #   end
+
       else
-        if aliases.include?(command)
-          Qcmd.debug "using alias #{ command }"
+        if aliases[command]
+          Qcmd.debug "([CLI handle_input] using alias #{ command })"
+
+          new_expression = expand_alias(command, args)
+
+          # alias expansion failed, go back to CLI
+          return if new_expression.nil?
+
+          Qcmd.debug "([CLI handle_input] expanded to: #{ new_expression.inspect })"
+
+          # recurse!
+          if new_expression.size == 1 && new_expression[0].is_a?(Array)
+            while new_expression.size == 1 && new_expression[0].is_a?(Array)
+              new_expression = new_expression[0]
+            end
+          end
+
+          if new_expression.all? {|exp| exp.is_a?(Array)}
+            new_expression.each {|nested_expression|
+              handle_input nested_expression
+            }
+          else
+            handle_input(new_expression)
+          end
+
 
         elsif Qcmd.context.cue_connected? && Qcmd::InputCompleter::ReservedCueWords.include?(command)
           # prepend the given command with a cue address
@@ -471,16 +580,26 @@ module Qcmd
           # send_workspace_command(command, *args)
         elsif Qcmd.context.workspace_connected? && Qcmd::InputCompleter::ReservedWorkspaceWords.include?(command)
           send_workspace_command(command, *args)
+
         else
           # failure modes?
           if %r[/] =~ command
             # might be legit OSC command, try sending
-            send_command(command, *args)
+            reply = Qcmd::Action.evaluate(args)
+            if reply.is_a?(QLab::Reply)
+              if !reply.status.nil?
+                print reply.status
+              end
+            else
+              render_data reply
+            end
           else
             if Qcmd.context.cue_connected?
+              # cue is connected, but command isn't a valid cue command
               print_wrapped("Unrecognized command: '#{ command }'. Try one of these cue commands: #{ Qcmd::InputCompleter::ReservedCueWords.join(', ') }")
               print 'or disconnect from the cue with ..'
             elsif Qcmd.context.workspace_connected?
+              # workspace is connected, but command isn't a valid workspace command
               print_wrapped("Unrecognized command: '#{ command }'. Try one of these workspace commands: #{ Qcmd::InputCompleter::ReservedWorkspaceWords.join(', ') }")
             elsif Qcmd.context.machine_connected?
               send_command(command, *args)

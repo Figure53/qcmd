@@ -4,7 +4,19 @@ module Qcmd
 
     # initialize and evaluate in one shot
     def self.evaluate action_input
-      self.new(action_input).evaluate
+      is_cue_action = false
+
+      if action_input.is_a?(String)
+        is_cue_action = %w(cue cue_id).include?(action_input.split.first)
+      else
+        is_cue_action = ['cue', 'cue_id', :cue, :cue_id].include?(action_input.first)
+      end
+
+      if is_cue_action
+        CueAction.new(action_input).evaluate
+      else
+        Action.new(action_input).evaluate
+      end
     end
 
     def initialize(expression)
@@ -35,6 +47,11 @@ module Qcmd
     end
 
     def parse(expression)
+      # unwrap nested arrays
+      if expression.size == 1 && expression[0].is_a?(Array)
+        expression = expression[0]
+      end
+
       expression.map do |token|
         if token.is_a?(Array)
           if [:cue, :cue_id].include?(token.first)
