@@ -75,10 +75,6 @@ module Qcmd
       }
     end
 
-    def joined_wrapped_text line
-      wrapped_text(line).join "\n"
-    end
-
     # turn line into lines of text of columns length
     def wrapped_text *args
       options = {
