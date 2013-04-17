@@ -31,10 +31,6 @@ module OSC
       @so.closed?
     end
 
-    def send_char c
-      @so.send [c].pack('C'), 0
-    end
-
     # send an OSC::Message
     def send msg
       enc_msg = msg.encode
@@ -68,6 +64,26 @@ module OSC
           end
         end
       end
+    end
+
+    def response
+      if received_messages = receive_raw
+        received_messages.map do |message|
+          OSCPacket.messages_from_network(message)
+        end.flatten
+      else
+        nil
+      end
+    end
+
+    def to_s
+      "#<OSC::TCPClient:#{ object_id } @host:#{ @host.inspect }, @port:#{ @port.inspect }, @handler:#{ @handler.to_s }>"
+    end
+
+    private
+
+    def send_char c
+      @so.send [c].pack('C'), 0
     end
 
     def receive_raw
@@ -130,16 +146,6 @@ module OSC
 
       if messages.size > 0
         messages
-      else
-        nil
-      end
-    end
-
-    def response
-      if received_messages = receive_raw
-        received_messages.map do |message|
-          OSCPacket.messages_from_network(message)
-        end.flatten
       else
         nil
       end
