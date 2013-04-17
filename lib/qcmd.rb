@@ -28,6 +28,7 @@ module Qcmd
   autoload :Network, 'qcmd/network'
   autoload :QLab, 'qcmd/qlab'
   autoload :VERSION, 'qcmd/version'
+  autoload :Action, 'qcmd/action'
 
   # on launch
 

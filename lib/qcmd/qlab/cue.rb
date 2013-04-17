@@ -50,6 +50,14 @@ module Qcmd
         self.data = options
       end
 
+      def sync
+        Qcmd.debug "([Cue sync] synchronizing cue with id #{ self.id })"
+
+        # reload cue properties from QLab
+        fields = %w(uniqueID number name type colorName flagged armed cues)
+        self.data = Qcmd::CueAction.evaluate("cue_id #{ self.id } valuesForKeys #{ JSON.dump(fields) }")
+      end
+
       def id
         data['uniqueID']
       end

@@ -3,16 +3,16 @@ require 'osc-ruby'
 
 #
 # This test file requires a running QLab instance with at least one cue. It is
-# *strongly* recommended you just open a new QLab workspace and close all
-# others.
+# *strongly* recommended you open a new QLab workspace and close all others
+# before running the tests.
 #
 
 def test_log msg=''
-  puts msg
+  # puts msg
 end
 
 class DeadHandler
-  def handle response
+  def self.handle response
     # do nothing :P
   end
 end
@@ -21,11 +21,11 @@ describe Qcmd::Commands do
   describe 'when sending messages' do
     before do
       Qcmd.context = Qcmd::Context.new
-      Qcmd.context.machine = machine = Qcmd::Machine.new('test machine', 'localhost', 53000)
-      @sender = OSC::TCPClient.new machine.address, machine.port, DeadHandler.new
+      Qcmd.context.machine = Qcmd::Machine.new('test machine', 'localhost', 53000)
+      Qcmd.context.connect_to_qlab DeadHandler
 
       # make sure alwaysReply is turned on
-      @sender.send(OSC::Message.new('/alwaysReply', 1))
+      Qcmd.context.qlab.send(OSC::Message.new('/alwaysReply', 1))
 
       @thread = nil
     end
@@ -47,7 +47,7 @@ describe Qcmd::Commands do
             reply = nil
 
             # should be able to instantiate all OSC message reponses as QLab replies
-            @sender.send(osc_message) do |response|
+            Qcmd.context.qlab.send(osc_message) do |response|
               reply = Qcmd::QLab::Reply.new(response)
               # test_log "[machine command] #{ reply.address } got #{ reply.to_s }"
             end
@@ -62,13 +62,11 @@ describe Qcmd::Commands do
     describe 'workspace commands' do
       before do
         # make sure alwaysReply is turned on
-        @sender.send(OSC::Message.new('/alwaysReply', 1)) do |response|
-          # do nothing with it :D
-        end
+        Qcmd.context.qlab.send(OSC::Message.new('/alwaysReply', 1))
 
         # load workspaces
         osc_message = OSC::Message.new '/workspaces'
-        @sender.send(osc_message) do |response|
+        Qcmd.context.qlab.send(osc_message) do |response|
           reply = Qcmd::QLab::Reply.new(response)
           Qcmd.context.machine.workspaces = reply.data.map {|ws| Qcmd::QLab::Workspace.new(ws)}
         end
@@ -87,7 +85,7 @@ describe Qcmd::Commands do
             reply = nil
 
             begin
-              @sender.send(osc_message) do |response|
+              Qcmd.context.qlab.send(osc_message) do |response|
                 osc_response = response
                 reply = Qcmd::QLab::Reply.new(response)
                 # test_log "[workspace command] #{ reply.address } got #{ reply.to_s }"
@@ -111,7 +109,7 @@ describe Qcmd::Commands do
         # spawn thread to shrink screen back down
         @thread = Thread.new do
           sleep 2
-          @sender.send(OSC::Message.new("/workspace/#{workspace.id}/toggleFullScreen"))
+          Qcmd.context.qlab.send(OSC::Message.new("/workspace/#{workspace.id}/toggleFullScreen"))
         end
       end
 
@@ -121,7 +119,7 @@ describe Qcmd::Commands do
 
           osc_message = OSC::Message.new "/workspace/#{ Qcmd.context.machine.workspaces.first.id }/cueLists"
 
-          @sender.send(osc_message) do |response|
+          Qcmd.context.qlab.send(osc_message) do |response|
             reply = Qcmd::QLab::Reply.new(response)
             @cue  = Qcmd::QLab::Cue.new(reply.data.first['cues'].first)
           end
@@ -139,7 +137,7 @@ describe Qcmd::Commands do
               osc_response = nil
               reply = nil
 
-              @sender.send(osc_message) do |response|
+              Qcmd.context.qlab.send(osc_message) do |response|
                 osc_response = response
                 reply = Qcmd::QLab::Reply.new(response)
               end

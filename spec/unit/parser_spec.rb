@@ -40,4 +40,14 @@ describe Qcmd::Parser do
     tokens = Qcmd::Parser.parse '..'
     tokens.should eql([:'..'])
   end
+
+  it "should parse leading slash commands" do
+    tokens = Qcmd::Parser.parse '/alwaysReply 1'
+    tokens.should eql([:'/alwaysReply', 1])
+  end
+
+  it 'should parse commands containing slashes' do
+    tokens = Qcmd::Parser.parse 'workspace/124/connect'
+    tokens.should eql([:'workspace/124/connect'])
+  end
 end

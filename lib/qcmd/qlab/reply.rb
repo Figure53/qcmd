@@ -27,6 +27,10 @@ module Qcmd
         @status ||= json['status']
       end
 
+      def empty?
+        false
+      end
+
       def to_s
         "<Qcmd::Qlab::Reply address:'#{address}' status:'#{status}' data:#{data.inspect}>"
       end

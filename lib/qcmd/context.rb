@@ -1,6 +1,6 @@
 module Qcmd
   class Context
-    attr_accessor :machine, :workspace, :workspace_connected, :cue, :cue_connected
+    attr_accessor :machine, :workspace, :workspace_connected, :cue, :cue_connected, :qlab
 
     def reset
       disconnect_machine
@@ -9,6 +9,7 @@ module Qcmd
     end
 
     def disconnect_machine
+      self.qlab.close unless self.qlab.nil?
       self.machine = nil
     end
 
@@ -44,6 +45,12 @@ module Qcmd
       else
         :cue
       end
+    end
+
+    def connect_to_qlab handler=nil
+      # get an open connection with the default handler
+      handler ||= Qcmd::Handler
+      self.qlab = OSC::TCPClient.new(machine.address, machine.port, handler)
     end
   end
 end

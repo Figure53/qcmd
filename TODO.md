@@ -29,4 +29,3 @@ Because custom actions expand into qcmd's normal actions, wildcards should work
 fine. `act-scene 20.* 1 2` would change the name of every cue whose number
 starts with "20." to "Act 1: Scene 2".
 
-
