@@ -35,7 +35,7 @@ describe Qcmd::Action do
     action.evaluate
   end
 
-  it 'should return the results of the OSC message' do
+  it 'should return the data resulting from an OSC message' do
     action = Qcmd::Action.new 'cueLists'
 
     result = nil
@@ -45,7 +45,7 @@ describe Qcmd::Action do
     }.to_not raise_error
 
     result.should_not be_nil
-    result.should be_an_instance_of(Qcmd::QLab::Reply)
+    result.should be_an_instance_of(Array)
   end
 
   describe 'workspace specific action' do
@@ -61,9 +61,10 @@ describe Qcmd::Action do
       workspace = Qcmd.context.machine.workspaces.first
 
       ws_action_string = "workspace/#{workspace.id}/connect"
+
       reply = Qcmd::Action.evaluate(ws_action_string)
 
-      reply.data.should eql('ok')
+      reply.should eql('ok')
     end
   end
 

@@ -8,11 +8,11 @@ module Qcmd
         Qcmd.debug "([Handler handle] converting OSC::Message to QLab::Reply)"
         reply = QLab::Reply.new(message)
 
-        Qcmd.debug "([Handler handle]handling #{ reply.to_s })"
+        Qcmd.debug "([Handler handle] handling #{ reply.to_s })"
 
         case reply.address
         when %r[/cueLists]
-          Qcmd.debug "([Handler handle]received cueLists)"
+          Qcmd.debug "([Handler handle] received cueLists)"
 
           # load global cue list
           Qcmd.context.workspace.cue_lists = reply.data.map {|cue_list| Qcmd::QLab::CueList.new(cue_list)}

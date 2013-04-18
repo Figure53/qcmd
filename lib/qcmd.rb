@@ -5,9 +5,6 @@ require 'osc-ruby'
 # data from QLab
 require 'json'
 
-# parser
-require 'sexpistol'
-
 require 'qcmd/version'
 require 'qcmd/plaintext'
 require 'qcmd/commands'
@@ -29,6 +26,7 @@ module Qcmd
   autoload :QLab, 'qcmd/qlab'
   autoload :VERSION, 'qcmd/version'
   autoload :Action, 'qcmd/action'
+  autoload :Aliases, 'qcmd/aliases'
 
   # on launch
 

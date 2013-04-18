@@ -75,7 +75,7 @@ module Qcmd
 
     def osc_address
       # prefix w/ slash if necessary
-      if %r[^/] !~ code[0]
+      if %r[^/] !~ code[0].to_s
         "/#{ code[0] }"
       else
         code[0]

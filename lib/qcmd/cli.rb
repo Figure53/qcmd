@@ -55,12 +55,7 @@ module Qcmd
     end
 
     def aliases
-      @aliases ||= {
-        'n' => 'cue $1 name $2',
-        'copy-name' => 'cue $2 name (cue $1 name)',
-        'zero-out' => (1..48).map {|n| "(cue $1 sliderLevel #{n} 0)"}.join(' '),
-        'copy-sliders' => (1..48).map {|n| "(cue $1 sliderLevel #{n} 0)"}.join(' '),
-      }
+      @aliases ||= Qcmd::Aliases.defaults.merge(Qcmd::Configuration.config['aliases'])
     end
 
     def alias_arg_matcher
@@ -68,8 +63,11 @@ module Qcmd
     end
 
     def add_alias name, expression
-      aliases[name] = Parser.parser.to_sexp(expression)
+      aliases[name] = Parser.generate(expression)
       InputCompleter.add_command name
+      Qcmd::Configuration.update('aliases', aliases)
+
+      aliases[name]
     end
 
     def replace_args alias_expression, original_expression
@@ -480,53 +478,8 @@ module Qcmd
         end
 
       when 'alias'
-        new_alias = add_alias args[1].to_s, args[2]
+        new_alias = add_alias(args[1].to_s, args[2])
         print %[Added alias for "#{ args[1] }": #{ new_alias }]
-
-        # when /copy-([a-zA-Z]+)/
-        #   cue_copy_from = args[1]
-        #   cue_copy_to   = args[2]
-        #   field = $1
-
-        #   protected_fields = %w(
-        #     allowsEditingDuration
-        #     defaultName
-        #     displayName
-        #     hasCueTargets
-        #     hasCueTargets
-        #     hasFileTargets
-        #     hasFileTargets
-        #     isBroken
-        #     isLoaded
-        #     isPaused
-        #     isRunning
-        #     listName
-        #     number
-        #     percentActionElapsed
-        #     percentPostWaitElapsed
-        #     percentPreWaitElapsed
-        #     preWaitElapsed
-        #     type
-        #     uniqueID
-        #   )
-
-        #   if protected_fields.include?(field)
-        #     print "the \"#{ field }\" field is not copyable"
-        #   else
-        #     send_command "cue/#{ cue_copy_from }/#{ field }" do |response|
-        #       if (response.data.is_a?(String) ||
-        #           response.data.is_a?(Fixnum) ||
-        #           response.data.is_a?(TrueClass) ||
-        #           response.data.is_a?(FalseClass))
-
-        #         send_command "cue/#{ cue_copy_to }/#{ field }", response.data do |paste_response|
-        #           if paste_response.status == 'ok'
-        #             print %[copied #{ field } "#{ response.data }" from #{ cue_copy_from } to #{ cue_copy_to }]
-        #           end
-        #         end
-        #       end
-        #     end
-        #   end
 
       else
         if aliases[command]

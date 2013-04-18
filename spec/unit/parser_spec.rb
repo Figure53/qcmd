@@ -23,6 +23,7 @@ describe Qcmd::Parser do
 
   it "should parse nested quotes" do
     tokens = Qcmd::Parser.parse 'go "word word" 10 -12.3 "life \"is good\" yeah"'
+
     tokens.should eql([:go, 'word word', 10, -12.3, 'life "is good" yeah'])
   end
 
@@ -49,5 +50,10 @@ describe Qcmd::Parser do
   it 'should parse commands containing slashes' do
     tokens = Qcmd::Parser.parse 'workspace/124/connect'
     tokens.should eql([:'workspace/124/connect'])
+  end
+
+  it 'should parse strings with parens' do
+    tokens = Qcmd::Parser.parse %[cue 1 name "this is (not good)"]
+    tokens.should eql([:cue, 1, :name, 'this is (not good)'])
   end
 end
