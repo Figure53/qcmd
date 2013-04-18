@@ -33,14 +33,14 @@ module Qcmd
       else
         @code = code.map do |token|
           if token.is_a?(Action)
-            Qcmd.debug "([Action evaluate] evaluating nested action: #{ token.code.inspect })"
+            Qcmd.debug "[Action evaluate] evaluating nested action: #{ token.code.inspect }"
             token.evaluate
           else
             token
           end
         end
 
-        Qcmd.debug "([Action evaluate] evaluating code: #{ code.inspect })"
+        Qcmd.debug "[Action evaluate] evaluating code: #{ code.inspect }"
 
         send_message
       end
@@ -55,7 +55,7 @@ module Qcmd
       expression.map do |token|
         if token.is_a?(Array)
           if [:cue, :cue_id].include?(token.first)
-            Qcmd.debug "(nested cue action detected in #{ expression.inspect })"
+            Qcmd.debug "nested cue action detected in #{ expression.inspect }"
             CueAction.new(token)
           else
             Action.new(token)
@@ -64,7 +64,7 @@ module Qcmd
           token
         end
       end.tap {|exp|
-        Qcmd.debug "([Action parse] returning: #{ exp.inspect })"
+        Qcmd.debug "[Action parse] returning: #{ exp.inspect }"
       }
     end
 
@@ -109,7 +109,7 @@ module Qcmd
 
       if responses.size == 1
         q_reply = responses[0]
-        Qcmd.debug "([Action send_message] got one response: #{q_reply.inspect})"
+        Qcmd.debug "[Action send_message] got one response: #{q_reply.inspect}"
 
         if q_reply.has_data?
           q_reply.data

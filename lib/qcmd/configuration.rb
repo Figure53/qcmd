@@ -35,7 +35,7 @@ module Qcmd
                       if !File.exists?(config_file)
                         File.open(config_file, 'w') {|f|
                           default = JSON.pretty_generate({'aliases' => Qcmd::Aliases.defaults})
-                          Qcmd.debug "([Configuration config] writing defaults: #{ default })"
+                          Qcmd.debug "[Configuration config] writing defaults: #{ default }"
                           f.write default
                         }
                       end

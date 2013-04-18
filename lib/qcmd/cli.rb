@@ -12,19 +12,19 @@ module Qcmd
     end
 
     def initialize options={}
-      Qcmd.debug "(launching with options: #{options.inspect})"
+      Qcmd.debug "[CLI initialize] launching with options: #{options.inspect}"
 
       Qcmd.context = Qcmd::Context.new
 
       if options[:machine_given]
-        Qcmd.debug "(autoconnecting to machine #{ options[:machine] })"
+        Qcmd.debug "[CLI initialize] autoconnecting to machine #{ options[:machine] }"
 
         Qcmd.while_quiet do
           connect_to_machine_by_name(options[:machine])
         end
 
         if options[:workspace_given]
-          Qcmd.debug "(autoconnecting to workspace #{ options[:machine] })"
+          Qcmd.debug "[CLI initialize] autoconnecting to workspace #{ options[:machine] }"
 
           Qcmd.while_quiet do
             connect_to_workspace_by_name(options[:workspace], options[:workspace_passcode])
@@ -35,7 +35,9 @@ module Qcmd
             print %[sent command "#{ options[:command] }"]
             exit 0
           end
-        elsif Qcmd.context.machine.workspaces.size == 1 && !Qcmd.context.machine.workspaces.first.passcode?
+        elsif Qcmd.context.machine.workspaces.size == 1 &&
+              !Qcmd.context.machine.workspaces.first.passcode? &&
+              !Qcmd.context.workspace_connected?
           connect_to_workspace_by_index(0, nil)
         end
       end
@@ -71,7 +73,7 @@ module Qcmd
     end
 
     def replace_args alias_expression, original_expression
-      Qcmd.debug "([CLI replace_args] populating #{ alias_expression.inspect } with #{ original_expression.inspect })"
+      Qcmd.debug "[CLI replace_args] populating #{ alias_expression.inspect } with #{ original_expression.inspect }"
 
       alias_expression.map do |arg|
         if arg.is_a?(Array)
@@ -81,7 +83,7 @@ module Qcmd
             arg_idx = $1.to_i
             arg_val = original_expression[arg_idx]
 
-            Qcmd.debug "([CLI replace_args] found $#{ arg_idx }, replacing with #{ arg_val.inspect })"
+            Qcmd.debug "[CLI replace_args] found $#{ arg_idx }, replacing with #{ arg_val.inspect }"
 
             arg = arg.to_s.sub("$#{ arg_idx }", arg_val.to_s)
           end
@@ -94,7 +96,7 @@ module Qcmd
     end
 
     def expand_alias key, expression
-      Qcmd.debug "([CLI expand_alias] using alias of #{ key } with #{ expression.inspect })"
+      Qcmd.debug "[CLI expand_alias] using alias of #{ key } with #{ expression.inspect }"
 
       new_command = aliases[key]
 
@@ -153,11 +155,11 @@ module Qcmd
       Qcmd.context.connect_to_qlab
 
       # tell QLab to always reply to messages
-      response = Qcmd::Action.evaluate('alwaysReply 1')
+      response = Qcmd::Action.evaluate('/alwaysReply 1')
       if response.nil? || response.empty?
-        print "FAILED TO CONNECT TO QLAB MACHINE #{ machine.name }"
+        print %[Failed to connect to QLab machine "#{ machine.name }"]
       elsif response.status == 'ok'
-        print "connected to #{ machine.name }"
+        print %[Connected to machine "#{ machine.name }"]
       end
 
       machine.workspaces = Qcmd::Action.evaluate('workspaces').map {|ws| QLab::Workspace.new(ws)}
@@ -231,7 +233,7 @@ module Qcmd
     end
 
     def use_workspace workspace
-      Qcmd.debug %[(connecting to workspace: "#{workspace.name}")]
+      Qcmd.debug %[[CLI use_workspace] connecting to workspace: "#{workspace.name}"]
 
       # set workspace in context. Will unset later if there's a problem.
       Qcmd.context.workspace = workspace
@@ -246,10 +248,10 @@ module Qcmd
       reply = Qcmd::Action.evaluate(ws_action_string)
 
       if reply == 'badpass'
-        print 'failed to connect to workspace, bad passcode or no passcode given'
+        print 'Failed to connect to workspace, bad passcode or no passcode given.'
         Qcmd.context.disconnect_workspace
       elsif reply == 'ok'
-        print 'connected to workspace'
+        print %[Connected to "#{Qcmd.context.workspace.name}"]
         Qcmd.context.workspace_connected = true
       end
 
@@ -258,7 +260,7 @@ module Qcmd
         load_cues
 
         if Qcmd.context.workspace.cue_lists
-          print "loaded #{pluralize Qcmd.context.workspace.cues.size, 'cue'}"
+          print "Loaded #{pluralize Qcmd.context.workspace.cues.size, 'cue'}"
         end
       end
     end
@@ -272,7 +274,7 @@ module Qcmd
         cli_input = Readline.readline(char, true)
 
         if cli_input.nil? || cli_input.size == 0
-          Qcmd.debug "(got: #{ cli_input.inspect })"
+          Qcmd.debug "[CLI start] got: #{ cli_input.inspect }"
           next
         end
 
@@ -288,7 +290,7 @@ module Qcmd
             handle_input Qcmd::Parser.parse(cli_input)
           end
         rescue => ex
-          print "command parser couldn't handle the last command: #{ ex.message }"
+          print "Command parser couldn't handle the last command: #{ ex.message }"
           print ex.backtrace
         end
       end
@@ -304,7 +306,7 @@ module Qcmd
         exit 0
 
       when 'connect'
-        Qcmd.debug "(connect command received args: #{ args.inspect } :: #{ args.map {|a| a.class.to_s}.inspect})"
+        Qcmd.debug "[CLI handle_input] connect command received args: #{ args.inspect } :: #{ args.map {|a| a.class.to_s}.inspect}"
 
         machine_ident = args[1]
 
@@ -341,12 +343,12 @@ module Qcmd
         end
 
       when 'use'
-        Qcmd.debug "(use command received args: #{ args.inspect })"
+        Qcmd.debug "[CLI handle_input] use command received args: #{ args.inspect }"
 
         workspace_name = args[1]
         passcode       = args[2]
 
-        Qcmd.debug "(using workspace: #{ workspace_name.inspect })"
+        Qcmd.debug "[CLI handle_input] using workspace: #{ workspace_name.inspect }"
 
         if workspace_name
           if workspace_name.is_a?(Fixnum)
@@ -483,14 +485,14 @@ module Qcmd
 
       else
         if aliases[command]
-          Qcmd.debug "([CLI handle_input] using alias #{ command })"
+          Qcmd.debug "[CLI handle_input] using alias #{ command }"
 
           new_expression = expand_alias(command, args)
 
           # alias expansion failed, go back to CLI
           return if new_expression.nil?
 
-          Qcmd.debug "([CLI handle_input] expanded to: #{ new_expression.inspect })"
+          Qcmd.debug "[CLI handle_input] expanded to: #{ new_expression.inspect }"
 
           # recurse!
           if new_expression.size == 1 && new_expression[0].is_a?(Array)
@@ -591,7 +593,7 @@ module Qcmd
         begin
           print JSON.pretty_generate(data)
         rescue JSON::GeneratorError
-          Qcmd.debug "([Handler#handle /cue] failed to JSON parse data: #{ data.inspect })"
+          Qcmd.debug "[CLI render_data] failed to JSON parse data: #{ data.inspect }"
           print data.to_s
         end
       else
@@ -603,7 +605,7 @@ module Qcmd
     def send_command command, *args
       options = args.extract_options!
 
-      Qcmd.debug "(building command from command, args, options: #{ command.inspect }, #{ args.inspect }, #{ options.inspect })"
+      Qcmd.debug "[CLI send_command] building command from command, args, options: #{ command.inspect }, #{ args.inspect }, #{ options.inspect }"
 
       # make sure command is valid OSC Address
       if %r[^/] =~ command
@@ -614,12 +616,12 @@ module Qcmd
 
       osc_message = OSC::Message.new address, *args
 
-      Qcmd.debug "(sending osc message #{ osc_message.address } #{osc_message.has_arguments? ? 'with' : 'without'} args)"
+      Qcmd.debug "[CLI send_command] sending osc message #{ osc_message.address } #{osc_message.has_arguments? ? 'with' : 'without'} args"
 
       if block_given?
         # use given response handler, pass it response as a QLab Reply
         Qcmd.context.qlab.send osc_message do |response|
-          Qcmd.debug "([CLI.send_command] converting OSC::Message to QLab::Reply)"
+          Qcmd.debug "[CLI send_command] converting OSC::Message to QLab::Reply"
           yield QLab::Reply.new(response)
         end
       else
@@ -636,7 +638,8 @@ module Qcmd
     ## QLab commands
 
     def load_cues
-      send_workspace_command 'cueLists'
+      cues = Qcmd::Action.evaluate('/cueLists')
+      Qcmd.context.workspace.cue_lists = cues.map {|cue_list| Qcmd::QLab::CueList.new(cue_list)}
     end
   end
 end

@@ -3,10 +3,10 @@ module Qcmd
     class Reply < Struct.new(:osc_message)
       def json
         @json ||= begin
-                    Qcmd.debug "([Reply json] parsing osc_message #{ osc_message.to_a.inspect })"
+                    Qcmd.debug "[Reply json] parsing osc_message #{ osc_message.to_a.inspect }"
                     JSON.parse(osc_message.to_a.first)
                   rescue => ex
-                    Qcmd.debug "([Reply json] json parsing of osc_message failed on message #{ osc_message.to_a.inspect }. #{ ex.message })"
+                    Qcmd.debug "[Reply json] json parsing of osc_message failed on message #{ osc_message.to_a.inspect }. #{ ex.message }"
                     {}
                   end
       end

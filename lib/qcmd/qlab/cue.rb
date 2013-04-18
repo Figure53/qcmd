@@ -51,7 +51,7 @@ module Qcmd
       end
 
       def sync
-        Qcmd.debug "([Cue sync] synchronizing cue with id #{ self.id })"
+        Qcmd.debug "[Cue sync] synchronizing cue with id #{ self.id }"
 
         # reload cue properties from QLab
         fields = %w(uniqueID number name type colorName flagged armed cues)

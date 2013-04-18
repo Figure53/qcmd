@@ -5,20 +5,14 @@ module Qcmd
 
       # Handle OSC response message from QLab
       def handle message
-        Qcmd.debug "([Handler handle] converting OSC::Message to QLab::Reply)"
+        Qcmd.debug "[Handler handle] converting OSC::Message to QLab::Reply"
         reply = QLab::Reply.new(message)
 
-        Qcmd.debug "([Handler handle] handling #{ reply.to_s })"
+        Qcmd.debug "[Handler handle] handling #{ reply.to_s }"
 
         case reply.address
-        when %r[/cueLists]
-          Qcmd.debug "([Handler handle] received cueLists)"
-
-          # load global cue list
-          Qcmd.context.workspace.cue_lists = reply.data.map {|cue_list| Qcmd::QLab::CueList.new(cue_list)}
-
         when %r[/(selectedCues|runningCues|runningOrPausedCues)]
-          Qcmd.debug "([Handler handle] received cue list from #{reply.address})"
+          Qcmd.debug "[Handler handle] received cue list from #{reply.address}"
 
           if reply.has_data?
             cues = reply.data.map {|cue| Qcmd::QLab::Cue.new(cue)}
@@ -45,7 +39,7 @@ module Qcmd
           print reply.data
 
         else
-          Qcmd.debug "([Handler handle] unrecognized message from QLab, cannot handle #{ reply.address })"
+          Qcmd.debug "[Handler handle] unrecognized message from QLab, cannot handle #{ reply.address }"
 
           if !reply.status.nil? && reply.status != 'ok'
             print reply.status
