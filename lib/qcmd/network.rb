@@ -41,7 +41,7 @@ module Qcmd
         end
 
         Qcmd.print
-        Qcmd.print 'type `connect MACHINE` to connect to a machine'
+        Qcmd.print 'Type `connect MACHINE` to connect to a machine'
         Qcmd.print
       end
 
@@ -53,7 +53,7 @@ module Qcmd
       end
 
       def find machine_name
-        machines.find {|m| m.name == machine_name}
+        machines.find {|m| m.name.to_s == machine_name.to_s}
       end
 
       def find_by_index idx

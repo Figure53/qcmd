@@ -153,8 +153,6 @@ module Qcmd
 #{Qcmd.centered_text(' Available Commands ', '-')}
 
 
-
-
 exit
 
   Close qcmd.
@@ -165,7 +163,6 @@ connect MACHINE_ID
   Connect to the machine with id MACHINE_ID. This can either be the name of the
   machine shown in the listing or its number on the list. Once a machine is
   connected its name will appear above the prompt.
-
 
 
 disconnect
@@ -245,6 +242,8 @@ cue_id ID COMMAND [VALUE [ANOTHER_VALUE ...]]
   Once a command has been sent to an existing cue, subsequent cue commands will
   be sent to the same cue with needing to repeat the leading "cue NUMBER". Once
   a cue is connected its name will appear above the prompt.
+
+
 
 ---------------------
 

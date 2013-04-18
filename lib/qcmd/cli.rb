@@ -184,19 +184,19 @@ module Qcmd
 
     def connect_to_machine_by_name machine_name
       if machine = Qcmd::Network.find(machine_name)
-        print "connecting to machine: #{machine_name}"
+        print "Connecting to machine: #{machine_name}"
         connect machine
       else
-        print 'sorry, that machine could not be found'
+        print 'Sorry, that machine could not be found'
       end
     end
 
     def connect_to_machine_by_index machine_idx
       if machine = Qcmd::Network.find_by_index(machine_idx)
-        print "connecting to machine: #{machine.name}"
+        print "Connecting to machine: #{machine.name}"
         connect machine
       else
-        print 'sorry, that machine could not be found'
+        print 'Sorry, that machine could not be found'
       end
     end
 
