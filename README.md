@@ -13,7 +13,12 @@ IT.**
 
 ## Installation
 
-Install this gem to your machine by running the following command:
+Before installing qcmd, you'll have to install the [Command Line Tools for
+Xcode](https://developer.apple.com/downloads). They're free, but you'll need an
+Apple ID to download them.
+
+Once you've done that, you can install qcmd to your machine by running the
+following command:
 
     $ sudo gem install qcmd
 
