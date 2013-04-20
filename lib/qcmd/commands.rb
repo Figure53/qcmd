@@ -244,43 +244,31 @@ cue_id ID COMMAND [VALUE [ANOTHER_VALUE ...]]
   a cue is connected its name will appear above the prompt.
 
 
+alias COMMAND ACTION
 
----------------------
+  Create a new command to use in qcmd! COMMAND should be a single word,
+  starting with made of one or more letters, numbers, underscores, and/or
+  hyphens. ACTION should be a legit qcmd program surrounded by parentheses,
+  which is anything you can type into qcmd. If you want your command to accept
+  arguments, use $1, $2, ...  $n in place of the argument.
 
-For example:
+  For example:
 
-    11:03
-    > connect qlab-mini
-    connecting to machine: qlab-mini
-    connected to qlab-mini
-    ------------------------------------ Workspaces -------------------------------------
+    > alias cue-rename (cue $1 name "Hello $2")
 
-    1. my workspace.cues
+  Would create a new command, "cue-rename", that you could use to rename a cue:
 
-    Type `use "WORKSPACE_NAME" PASSCODE` to load a workspace. Passcode is
-    optional.
+    > cue-rename 10 World
 
-    11:03 [qlab-mini]
-    > use "my workspace.cues"
-    connecting to workspace: my workspace.cues
-    connected to workspace
-    loaded 13 cues
-    11:04 [qlab-mini] [my workspace.cues]
-    > cue 2 start
-    ok
-    11:04 [qlab-mini] [my workspace.cues] [AFTER THE LAST SCENE]
-    > rate 0.2
-    ok
-    11:04 [qlab-mini] [my workspace.cues] [AFTER THE LAST SCENE]
-    > stop
-    ok
-    11:04 [qlab-mini] [my workspace.cues] [AFTER THE LAST SCENE]
-    > ..
-    11:04 [qlab-mini] [my workspace.cues]
-    > disconnect
-    11:04
-    >
+  to rename cue number 10 to "Hello World".
 
+  We've included a few custom commands so you can see how it works. Aliases are
+  stored in ~/.qcmd/settings.json and can be edited from there.
+
+
+aliases
+
+  See all the aliases.
 
 ]
         end
