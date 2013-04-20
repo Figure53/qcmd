@@ -1,3 +1,3 @@
 module Qcmd
-  VERSION = "0.1.8.pre"
+  VERSION = "0.1.8"
 end
