@@ -10,7 +10,7 @@ module Qcmd
       attr_accessor :machines, :browse_thread
 
       def init
-        self.machines = []
+        self.machines ||= []
       end
 
       # browse can be used alone to populate the machines list

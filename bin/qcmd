@@ -31,17 +31,16 @@ end
 # browse local network and check for qlab + qlab workspaces
 
 Qcmd::History.load
+Qcmd::Network.init
 
 if !opts[:machine_given]
   Qcmd.ascii_qlab
   Qcmd.print
   Qcmd.print Qcmd.centered_text(VERSION_STRING)
-
   Qcmd::Network.browse_and_display opts
 else
-  if Qcmd::Network::IPV4_MATCHER != opts[:machine]
+  if Qcmd::Network::IPV4_MATCHER =~ opts[:machine]
     Qcmd.debug "[bin/qcmd] given machine name matches IP address pattern"
-    Qcmd::Network.init
   else
     Qcmd.debug "[bin/qcmd] browsing network #{ opts[:machine] }"
     Qcmd::Network.browse
