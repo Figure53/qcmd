@@ -45,94 +45,90 @@ project repository (https://github.com/Figure53/qcmd) to report any issues.
 An example session might look like this:
 
     $ qcmd
-                         .::::    .::                .::
-                       .::    .:: .::                .::
-                     .::       .::.::         .::    .::
-                     .::       .::.::       .::  .:: .:: .::
-                     .::       .::.::      .::   .:: .::   .::
-                       .:: .: .:: .::      .::   .:: .::   .::
-                         .:: ::   .::::::::  .:: .:::.:: .::
-                              .:
+                             .::::    .::                .::
+                           .::    .:: .::                .::
+                         .::       .::.::         .::    .::
+                         .::       .::.::       .::  .:: .:: .::
+                         .::       .::.::      .::   .:: .::   .::
+                           .:: .: .:: .::      .::   .:: .::   .::
+                             .:: ::   .::::::::  .:: .:::.:: .::
+                                  .:
 
-                   qcmd 0.1.0 (c) 2012 Figure 53, Baltimore, MD.
-
-    Found 2 QLab machines
-
-    1. adam-retina
-    2. f53zwimac
-
-    type `connect MACHINE` to connect to a machine
-
-    > connect adam-retina
-    connecting to machine: adam-retina
-    -------------------------------- Workspaces --------------------------------
-
-    1. Untitled Workspace
-
-    Type `use "WORKSPACE_NAME" PASSCODE` to load a workspace. Only enter a
-    passcode if your workspace uses one
-
-    adam-retina> use "Untitled Workspace"
-    connecting to workspace: Untitled Workspace
-    connected to workspace
-    loaded 2 cues
-    adam-retina:Untitled Workspace> cues
-
-    ----------------------------------- Cues -----------------------------------
-
-      Number          Id      Name    Type
-
-           1           2      Nope    Wait
-           2           3      Nipe   Audio
-
-
-    adam-retina:Untitled Workspace> cue 2 start
-    adam-retina:Untitled Workspace> cue 2 isRunning
-    true
-    adam-retina:Untitled Workspace> workspace runningCues
-
-    ------------------------------- Running Cues -------------------------------
-
-     Number  Id      Name     Type
-
-          2   3      Nipe    Audio
-
-
-    adam-retina:Untitled Workspace> cue 2
-    1                       2                       actionElapsed
-    allowsEditingDuration   armed                   basics
-    children                colorName               connect
-    continueMode            cue                     cueLists
-    cueTargetId             cueTargetNumber         disconnect
-    duration                exit                    flagged
-    hasCueTargets           hasFileTargets          isBroken
-    isLoaded                isPaused                isRunning
-    load                    loadAt                  name
-    notes                   number                  panic
-    pause                   percentActionElapsed    percentPostWaitElapsed
-    percentPreWaitElapsed   postWait                postWaitElapsed
-    preview                 preWait                 preWaitElapsed
-    reset                   resume                  runningCues
-    runningOrPausedCues     selectedCues            stop
-    thump                   type                    uniqueID
-    workspace               workspaces
-    adam-retina:Untitled Workspace> cue 2 pause
-    adam-retina:Untitled Workspace> cue 2 isRunning
-    false
-    adam-retina:Untitled Workspace> cue 2 percentActionElapsed
-    0.109189204871655
-    adam-retina:Untitled Workspace> disconnect
+                       qcmd 0.1.9 (c) 2012 Figure 53, Baltimore, MD.
 
     Found 2 QLab machines
 
-    1. adam-retina
-    2. f53zwimac
+    1. my-mac-laptop
+    2. f53imac
 
-    type `connect MACHINE` to connect to a machine
+    Type `connect "MACHINE NAME"` or `connect IP_ADDRESS` to connect to a machine
 
+    13:40
+    > connect my-mac-laptop
+    Connecting to machine: my-mac-laptop
+    Connected to machine "my-mac-laptop"
+    Connecting to workspace: Untitled Workspace 1
+    Connected to "Untitled Workspace 1"
+    Loaded 3 cues
+    13:41 [my-mac-laptop] [Untitled Workspace 1]
+    > cues
+
+    ------------------------------- Cues: Main Cue List -------------------------------
+
+       Number	   Id	        Name	    Type
+
+            1	    1	         YOP	   Audio
+            2	    2	  Not Armory	   Audio
+            3	    3	        BUTT	   Audio
+
+
+    13:41 [my-mac-laptop] [Untitled Workspace 1]
+    > cue 3 name "Fix this name"
+    ok
+    13:41 [my-mac-laptop] [Untitled Workspace 1] [3 Fix this name]
+    > start
+    ok
+    13:41 [my-mac-laptop] [Untitled Workspace 1] [3 Fix this name]
+    > ..
+    13:41 [my-mac-laptop] [Untitled Workspace 1]
+    > hardStop
+    ok
+    13:41 [my-mac-laptop] [Untitled Workspace 1]
+    > copy-name 3 2
+    ok
+    13:41 [my-mac-laptop] [Untitled Workspace 1] [2 Fix this name]
+    > cues
+
+    ------------------------------- Cues: Main Cue List -------------------------------
+
+       Number	   Id	           Name	    Type
+
+            1	    1	            YOP	   Audio
+            2	    2	  Fix this name	   Audio
+            3	    3	  Fix this name	   Audio
+
+
+    13:41 [my-mac-laptop] [Untitled Workspace 1] [2 Fix this name]
+    > alias smiley (cue $1 name ":) :) :) :) :) :)")
+    Added alias for "smiley": (cue $1 name ":) :) :) :) :) :)")
+    13:41 [my-mac-laptop] [Untitled Workspace 1] [2 Fix this name]
+    > smiley 2
+    ok
+    13:41 [my-mac-laptop] [Untitled Workspace 1] [2 :) :) :) :) :) :)]
+    > cues
+
+    ------------------------------- Cues: Main Cue List -------------------------------
+
+       Number	   Id	               Name	    Type
+
+            1	    1	                YOP	   Audio
+            2	    2	  :) :) :) :) :) :)	   Audio
+            3	    3	      Fix this name	   Audio
+
+
+    13:41 [my-mac-laptop] [Untitled Workspace 1] [2 :) :) :) :) :) :)]
     > exit
     exiting...
-
 
 ## Contributing
 
