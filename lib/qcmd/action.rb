@@ -87,7 +87,7 @@ module Qcmd
     end
 
     def osc_arguments
-      code[1..-1]
+      stringify code[1..-1]
     end
 
     # the raw command
@@ -100,6 +100,7 @@ module Qcmd
     def send_message
       responses = []
 
+      Qcmd.debug "[Action send_message] send #{ osc_message.encode }"
       Qcmd.context.qlab.send(osc_message) do |response|
         # puts "response to: #{ osc_message.inspect }"
         # puts response.inspect
@@ -120,6 +121,20 @@ module Qcmd
         responses
       end
     end
+
+    def stringify args
+      if args.nil?
+        nil
+      else
+        args.map {|arg|
+          if arg.is_a?(Symbol)
+            arg.to_s
+          else
+            arg
+          end
+        }
+      end
+    end
   end
 
   class CueAction < Action
@@ -133,18 +148,7 @@ module Qcmd
     end
 
     def osc_arguments
-      args = code[3..-1]
-      if args.nil?
-        nil
-      else
-        args.map {|arg|
-          if arg.is_a?(Symbol)
-            arg.to_s
-          else
-            arg
-          end
-        }
-      end
+      stringify code[3..-1]
     end
 
     # cue specific fields
