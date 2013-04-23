@@ -23,9 +23,9 @@ module Qcmd
           connect_to_machine_by_name(options[:machine])
         end
 
-        if options[:workspace_given]
-          load_workspaces
+        load_workspaces
 
+        if options[:workspace_given]
           Qcmd.debug "[CLI initialize] autoconnecting to workspace #{ options[:workspace] }"
 
           Qcmd.while_quiet do
@@ -287,7 +287,7 @@ module Qcmd
         begin
           if /;/ =~ cli_input
             cli_input.split(';').each do |sub_input|
-              handle_input Qcmd::Parser.parse(sub_input)
+              handle_input Qcmd::Parser.parse(sub_input.strip)
             end
           else
             handle_input Qcmd::Parser.parse(cli_input)
@@ -634,8 +634,12 @@ module Qcmd
     end
 
     def send_workspace_command _command, *args
-      args[0] = "workspace/#{ Qcmd.context.workspace.id }/#{ _command }"
-      Qcmd::Action.evaluate(args)
+      if !Qcmd.context.workspace.nil?
+        args[0] = "workspace/#{ Qcmd.context.workspace.id }/#{ _command }"
+        Qcmd::Action.evaluate(args)
+      else
+        log(:warning, "A workspace needs to be connected before a workspace command can be sent.")
+      end
     end
 
     ## QLab commands
