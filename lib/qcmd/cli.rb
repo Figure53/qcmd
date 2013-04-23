@@ -24,16 +24,17 @@ module Qcmd
         end
 
         if options[:workspace_given]
-          Qcmd.debug "[CLI initialize] autoconnecting to workspace #{ options[:machine] }"
+          load_workspaces
+
+          Qcmd.debug "[CLI initialize] autoconnecting to workspace #{ options[:workspace] }"
 
           Qcmd.while_quiet do
             connect_to_workspace_by_name(options[:workspace], options[:workspace_passcode])
           end
 
           if options[:command_given]
-            handle_input options[:command]
-            print %[sent command "#{ options[:command] }"]
-            exit 0
+            handle_input Qcmd::Parser.parse(options[:command])
+            return
           end
         elsif Qcmd.context.machine.workspaces.size == 1 &&
               !Qcmd.context.machine.workspaces.first.passcode? &&
@@ -141,7 +142,7 @@ module Qcmd
       ["#{clock} #{prefix.join(' ')}", "> "]
     end
 
-    def connect machine
+    def connect_machine machine
       if machine.nil?
         print "A valid machine is needed to connect!"
         return
@@ -157,17 +158,9 @@ module Qcmd
       # tell QLab to always reply to messages
       response = Qcmd::Action.evaluate('/alwaysReply 1')
       if response.nil? || response.empty?
-        print %[Failed to connect to QLab machine "#{ machine.name }"]
+        log(:error, %[Failed to connect to QLab machine "#{ machine.name }"])
       elsif response.status == 'ok'
         print %[Connected to machine "#{ machine.name }"]
-      end
-
-      machine.workspaces = Qcmd::Action.evaluate('workspaces').map {|ws| QLab::Workspace.new(ws)}
-
-      if Qcmd.context.machine.workspaces.size == 1 && !Qcmd.context.machine.workspaces.first.passcode?
-        connect_to_workspace_by_index(0, nil)
-      else
-        Handler.print_workspace_list
       end
     end
 
@@ -183,20 +176,29 @@ module Qcmd
     end
 
     def connect_to_machine_by_name machine_name
-      if machine = Qcmd::Network.find(machine_name)
-        print "Connecting to machine: #{machine_name}"
-        connect machine
+      machine = nil
+
+      # machine name can be found or IPv4 address is given
+      if Qcmd::Network.find(machine_name)
+        machine = Qcmd::Network.find(machine_name)
+      elsif Qcmd::Network::IPV4_MATCHER  =~ machine_name
+        machine = Qcmd::Machine.new(machine_name, machine_name, 53000)
+      end
+
+      if machine.nil?
+        log(:warning, 'Sorry, that machine could not be found')
       else
-        print 'Sorry, that machine could not be found'
+        print "Connecting to machine: #{machine_name}"
+        connect_machine machine
       end
     end
 
     def connect_to_machine_by_index machine_idx
       if machine = Qcmd::Network.find_by_index(machine_idx)
         print "Connecting to machine: #{machine.name}"
-        connect machine
+        connect_machine machine
       else
-        print 'Sorry, that machine could not be found'
+        log(:warning, 'Sorry, that machine could not be found')
       end
     end
 
@@ -208,7 +210,7 @@ module Qcmd
           print "That workspace isn't on the list."
         end
       else
-        print %[You can't connect to a workspace until you've connected to a machine. ]
+        log(:warning, %[You can't connect to a workspace until you've connected to a machine. ])
         disconnected_machine_warning
       end
     end
@@ -218,16 +220,15 @@ module Qcmd
         if workspace = Qcmd.context.machine.find_workspace(workspace_name)
           workspace.passcode = passcode
           print "Connecting to workspace: #{workspace_name}"
-
           use_workspace workspace
         else
-          print "That workspace doesn't seem to exist, try one of the following:"
+          log(:warning, "That workspace doesn't seem to exist, try one of the following:")
           Qcmd.context.machine.workspaces.each do |ws|
-            print %[  "#{ ws.name }"]
+            log(:warning, %[  "#{ ws.name }"])
           end
         end
       else
-        print %[You can't connect to a workspace until you've connected to a machine. ]
+        log(:warning, %[You can't connect to a workspace until you've connected to a machine. ])
         disconnected_machine_warning
       end
     end
@@ -248,7 +249,7 @@ module Qcmd
       reply = Qcmd::Action.evaluate(ws_action_string)
 
       if reply == 'badpass'
-        print 'Failed to connect to workspace, bad passcode or no passcode given.'
+        log(:error, 'Failed to connect to workspace, bad passcode or no passcode given.')
         Qcmd.context.disconnect_workspace
       elsif reply == 'ok'
         print %[Connected to "#{Qcmd.context.workspace.name}"]
@@ -300,6 +301,8 @@ module Qcmd
     def handle_input args
       command = args[0].to_s
 
+      Qcmd.debug "[CLI handle_input] command: #{ command }; args: #{ args.inspect }"
+
       case command
       when 'exit', 'quit', 'q'
         print 'exiting...'
@@ -316,6 +319,12 @@ module Qcmd
           connect_to_machine_by_index machine_ident - 1
         else
           connect_to_machine_by_name machine_ident
+        end
+
+        load_workspaces
+
+        if !connect_default_workspace
+          Handler.print_workspace_list
         end
 
       when 'disconnect'
@@ -509,7 +518,6 @@ module Qcmd
             handle_input(new_expression)
           end
 
-
         elsif Qcmd.context.cue_connected? && Qcmd::InputCompleter::ReservedCueWords.include?(command)
           # prepend the given command with a cue address
           if Qcmd.context.cue.number.nil? || Qcmd.context.cue.number.size == 0
@@ -636,6 +644,19 @@ module Qcmd
     end
 
     ## QLab commands
+
+    def load_workspaces
+      Qcmd.context.machine.workspaces = Qcmd::Action.evaluate('workspaces').map {|ws| QLab::Workspace.new(ws)}
+    end
+
+    def connect_default_workspace
+      if Qcmd.context.machine.workspaces.size == 1 && !Qcmd.context.machine.workspaces.first.passcode?
+        connect_to_workspace_by_index(0, nil)
+        true
+      else
+        false
+      end
+    end
 
     def load_cues
       cues = Qcmd::Action.evaluate('/cueLists')

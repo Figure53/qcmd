@@ -61,7 +61,7 @@ module Qcmd
         end
 
         Qcmd.print
-        Qcmd.print_wrapped('Type `use "WORKSPACE_NAME" PASSCODE` to load a workspace. Passcode is required if workspace is [PROTECTED].')
+        Qcmd.print_wrapped('Type `use "WORKSPACE NAME" PASSCODE` to load a workspace. Passcode is required if workspace is [PROTECTED].')
         Qcmd.print
       end
     end

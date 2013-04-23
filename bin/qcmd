@@ -3,6 +3,8 @@
 require 'qcmd'
 require 'trollop'
 
+# require 'profile'
+
 VERSION_STRING =  "qcmd #{ Qcmd::VERSION } (c) 2012 Figure 53, Baltimore, MD."
 
 opts = Trollop::options do
@@ -14,6 +16,8 @@ opts = Trollop::options do
   opt :workspace_passcode, "Use the given workspace passcode", :type => :integer
   opt :command, "Execute a single command and exit", :type => :string
 end
+
+Qcmd.log_level = :info
 
 if opts[:verbose]
   Qcmd.log_level = :debug
@@ -35,13 +39,23 @@ if !opts[:machine_given]
 
   Qcmd::Network.browse_and_display opts
 else
-  Qcmd::Network.browse
+  if Qcmd::Network::IPV4_MATCHER != opts[:machine]
+    Qcmd.debug "[bin/qcmd] given machine name matches IP address pattern"
+    Qcmd::Network.init
+  else
+    Qcmd.debug "[bin/qcmd] browsing network #{ opts[:machine] }"
+    Qcmd::Network.browse
+  end
 end
 
 if opts[:command_given] && !(opts[:machine_given] && opts[:workspace_given])
   Qcmd.print_wrapped("if you give a command, you must also give a
                       machine name and a workspace name to connect to")
+elsif opts[:command_given] && opts[:machine_given] && opts[:workspace_given]
+  opts[:command_mode] = true
 end
 
-
+# Profiler__::start_profile
 Qcmd::CLI.launch opts
+# Profiler__::stop_profile
+# Profiler__::print_profile($stderr)

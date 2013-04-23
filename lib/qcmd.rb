@@ -37,6 +37,8 @@ module Qcmd
     attr_accessor :debug_mode
     attr_accessor :context
 
+    LEVELS = %w(debug info warning error none)
+
     def verbose!
       self.log_level = :debug
     end
@@ -74,6 +76,10 @@ module Qcmd
       Qcmd::Configuration.log.puts "[%s] %s" % [Time.now.strftime('%T'), message]
 
       log(message) if log_level == :debug
+    end
+
+    def log_level_acheived? level
+      LEVELS.index(level.to_s) >= LEVELS.index(log_level.to_s)
     end
 
     def connected?
