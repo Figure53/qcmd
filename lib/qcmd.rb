@@ -33,11 +33,22 @@ module Qcmd
   class << self
     include Qcmd::Plaintext
 
-    attr_accessor :log_level
     attr_accessor :debug_mode
     attr_accessor :context
 
     LEVELS = %w(debug info warning error none)
+
+    def log_level
+      @log_level ||= :info
+    end
+
+    def log_level=(value)
+      if LEVELS.include?(value.to_s)
+        @log_level = value
+      else
+        raise "Invalid log_level value: #{ value.to_s }"
+      end
+    end
 
     def verbose!
       self.log_level = :debug
