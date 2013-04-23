@@ -1,16 +1,18 @@
 module Qcmd
   module Plaintext
-    def log message=nil
-      if message
-        puts message
-      else
-        puts
+    def log level, message=nil
+      if Qcmd.log_level_acheived?(level)
+        if message
+          puts message
+        else
+          puts
+        end
       end
     end
 
     # display output unless absolutely silent
     def print message=nil
-      log(message) unless Qcmd.silent?
+      log(:info, message) unless Qcmd.silent?
     end
 
     def set_columns value
