@@ -10,7 +10,7 @@ Gem::Specification.new do |gem|
   gem.email         = ["adam.bachman@gmail.com"]
   gem.description   = %q{A simple interactive QLab 3 command line controller}
   gem.summary       = %q{QLab 3 console}
-  gem.homepage      = "https://github.com/abachman/qcmd"
+  gem.homepage      = "https://github.com/Figure53/qcmd"
 
   gem.files         = `git ls-files`.split($/)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
