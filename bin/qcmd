@@ -41,6 +41,8 @@ if !opts[:machine_given]
 else
   if Qcmd::Network::IPV4_MATCHER =~ opts[:machine]
     Qcmd.debug "[bin/qcmd] given machine name matches IP address pattern"
+  elsif opts[:machine] == 'localhost'
+    opts[:machine] = '127.0.0.1'
   else
     Qcmd.debug "[bin/qcmd] browsing network #{ opts[:machine] }"
     Qcmd::Network.browse
