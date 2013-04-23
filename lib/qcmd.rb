@@ -75,7 +75,7 @@ module Qcmd
 
       Qcmd::Configuration.log.puts "[%s] %s" % [Time.now.strftime('%T'), message]
 
-      log(message) if log_level == :debug
+      log(:debug, message)
     end
 
     def log_level_acheived? level
