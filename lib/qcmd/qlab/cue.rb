@@ -44,6 +44,10 @@ module Qcmd
     #    \"armed\":true}]
 
     class Cue
+      TYPES = %w(audio mic video camera fade osc midi midi file timecode group
+                 start stop pause load reset devamp goto target arm disarm wait
+                 memo script cuelist)
+
       attr_accessor :data
 
       def initialize options={}

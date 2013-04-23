@@ -88,6 +88,10 @@ module Qcmd
       word_wrap(line, options)
     end
 
+    def joined_wrapped *args
+      wrapped_text(*args).join("\n")
+    end
+
     def print_wrapped line
       print wrapped_text(line)
     end

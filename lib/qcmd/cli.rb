@@ -39,7 +39,9 @@ module Qcmd
         elsif Qcmd.context.machine.workspaces.size == 1 &&
               !Qcmd.context.machine.workspaces.first.passcode? &&
               !Qcmd.context.workspace_connected?
-          connect_to_workspace_by_index(0, nil)
+          if !connect_default_workspace
+            Handler.print_workspace_list
+          end
         end
       end
 
@@ -391,18 +393,12 @@ module Qcmd
           print_wrapped("no workspace command given. available workspace commands
                          are: #{Qcmd::InputCompleter::ReservedWorkspaceWords.join(', ')}")
         else
-          send_workspace_command(workspace_command, *args)
+          reply = send_workspace_command(workspace_command, *args)
+          handle_simple_reply reply
         end
 
       when 'help'
-        help_command = args.shift
-
-        if help_command.nil?
-          # print help according to current context
-          Qcmd::Commands::Help.print_all_commands
-        else
-          # print command specific help
-        end
+        Qcmd::Commands::Help.print_all_commands
 
       when 'cues'
         if !Qcmd.context.workspace_connected?
@@ -450,33 +446,9 @@ module Qcmd
         cue_action = Qcmd::CueAction.new(args)
 
         reply = cue_action.evaluate
+        handle_simple_reply reply
 
-        if reply.is_a?(QLab::Reply)
-          if !reply.status.nil?
-            print reply.status
-          end
-        else
-          render_data reply
-        end
-
-        # fixate on cue
-        if Qcmd.context.workspace.has_cues?
-          _cue = Qcmd.context.workspace.cues.find {|cue|
-            case cue_action.id_field
-            when :cue
-              cue.number.to_s == cue_action.identifier.to_s
-            when :cue_id
-              cue.id.to_s == cue_action.identifier.to_s
-            end
-          }
-
-          if _cue
-            Qcmd.context.cue = _cue
-            Qcmd.context.cue_connected = true
-
-            Qcmd.context.cue.sync
-          end
-        end
+        fixate_on_cue(cue_action)
 
       when 'aliases'
         print centered_text(" Available Custom Commands ", '-')
@@ -491,6 +463,38 @@ module Qcmd
       when 'alias'
         new_alias = add_alias(args[1].to_s, args[2])
         print %[Added alias for "#{ args[1] }": #{ new_alias }]
+
+      when 'new'
+        # create new cue
+
+        if !(args.size == 2 && QLab::Cue::TYPES.include?(args.last.to_s))
+          log(:warning, "That cue type can't be created, try one of the following:")
+          log(:warning, joined_wrapped(QLab::Cue::TYPES.join(", ")))
+        else
+          reply = send_workspace_command(command, *args)
+          handle_simple_reply reply
+        end
+
+      when 'select'
+
+        if args.size == 2
+          reply = send_workspace_command "#{ args[0] }/#{ args[1] }"
+
+          if reply.respond_to?(:status) && reply.status == 'ok'
+            # cue exists, get name and fixate
+            cue_action = Qcmd::CueAction.new([:cue, args[1], :name])
+            reply = cue_action.evaluate
+            if reply.is_a?(QLab::Reply)
+              # something went wrong
+              handle_simple_reply reply
+            else
+              print "Selected #{args[1]} - #{reply}"
+              fixate_on_cue(cue_action)
+            end
+          end
+        else
+          log(:warning, "The select command should be in the form `select CUE_NUMBER`.")
+        end
 
       else
         if aliases[command]
@@ -531,31 +535,18 @@ module Qcmd
           cue_action = Qcmd::CueAction.new(args)
 
           reply = cue_action.evaluate
+          handle_simple_reply reply
 
-          if reply.is_a?(QLab::Reply)
-            if !reply.status.nil?
-              print reply.status
-            end
-          else
-            render_data reply
-          end
-
-          # send_workspace_command(command, *args)
         elsif Qcmd.context.workspace_connected? && Qcmd::InputCompleter::ReservedWorkspaceWords.include?(command)
-          send_workspace_command(command, *args)
+          reply = send_workspace_command(command, *args)
+          handle_simple_reply reply
 
         else
           # failure modes?
           if %r[/] =~ command
             # might be legit OSC command, try sending
             reply = Qcmd::Action.evaluate(args)
-            if reply.is_a?(QLab::Reply)
-              if !reply.status.nil?
-                print reply.status
-              end
-            else
-              render_data reply
-            end
+            handle_simple_reply reply
           else
             if Qcmd.context.cue_connected?
               # cue is connected, but command isn't a valid cue command
@@ -565,7 +556,9 @@ module Qcmd
               # workspace is connected, but command isn't a valid workspace command
               print_wrapped("Unrecognized command: '#{ command }'. Try one of these workspace commands: #{ Qcmd::InputCompleter::ReservedWorkspaceWords.join(', ') }")
             elsif Qcmd.context.machine_connected?
-              send_command(command, *args)
+              # send a command directly to a machine
+              reply = Qcmd::Action.evaluate(args)
+              handle_simple_reply reply
             else
               print 'you must connect to a machine before sending commands'
             end
@@ -596,6 +589,16 @@ module Qcmd
     ### communication actions
     private
 
+    def handle_simple_reply reply
+      if reply.is_a?(QLab::Reply)
+        if !reply.status.nil?
+          print reply.status
+        end
+      else
+        render_data reply
+      end
+    end
+
     def render_data data
       if data.is_a?(Array) || data.is_a?(Hash)
         begin
@@ -609,38 +612,30 @@ module Qcmd
       end
     end
 
+    def fixate_on_cue cue_action
+      # fixate on cue
+      if Qcmd.context.workspace.has_cues?
+        _cue = Qcmd.context.workspace.cues.find {|cue|
+          case cue_action.id_field
+          when :cue
+            cue.number.to_s == cue_action.identifier.to_s
+          when :cue_id
+            cue.id.to_s == cue_action.identifier.to_s
+          end
+        }
 
-    def send_command command, *args
-      options = args.extract_options!
+        if _cue
+          Qcmd.context.cue = _cue
+          Qcmd.context.cue_connected = true
 
-      Qcmd.debug "[CLI send_command] building command from command, args, options: #{ command.inspect }, #{ args.inspect }, #{ options.inspect }"
-
-      # make sure command is valid OSC Address
-      if %r[^/] =~ command
-        address = command
-      else
-        address = "/#{ command }"
-      end
-
-      osc_message = OSC::Message.new address, *args
-
-      Qcmd.debug "[CLI send_command] sending osc message #{ osc_message.address } #{osc_message.has_arguments? ? 'with' : 'without'} args"
-
-      if block_given?
-        # use given response handler, pass it response as a QLab Reply
-        Qcmd.context.qlab.send osc_message do |response|
-          Qcmd.debug "[CLI send_command] converting OSC::Message to QLab::Reply"
-          yield QLab::Reply.new(response)
+          Qcmd.context.cue.sync
         end
-      else
-        # rely on default response handler
-        Qcmd.context.qlab.send(osc_message)
       end
     end
 
     def send_workspace_command _command, *args
-      command = "workspace/#{ Qcmd.context.workspace.id }/#{ _command }"
-      send_command(command, *args)
+      args[0] = "workspace/#{ Qcmd.context.workspace.id }/#{ _command }"
+      Qcmd::Action.evaluate(args)
     end
 
     ## QLab commands
