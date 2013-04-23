@@ -35,7 +35,9 @@ From there, you can connect to a machine, connect to a workspace, and then
 send commands to cues and the workspace.
 
 `qcmd` supports tab completion for commands in case you get stuck or are
-wondering what you can do from the console.
+wondering what you can do from the console. Type the beginning of a command and
+hit tab to auto-complete the command, or hit it twice to see all possible
+completions.
 
 Run `qcmd` with the -v option to get full debugging output. Use the main
 project repository (https://github.com/Figure53/qcmd) to report any issues.
