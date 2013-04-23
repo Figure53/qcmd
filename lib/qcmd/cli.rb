@@ -82,7 +82,7 @@ module Qcmd
         if arg.is_a?(Array)
           replace_args(arg, original_expression)
         elsif (arg.is_a?(Symbol) || arg.is_a?(String)) && alias_arg_matcher =~ arg.to_s
-          while alias_arg_matcher  =~ arg.to_s
+          while alias_arg_matcher =~ arg.to_s
             arg_idx = $1.to_i
             arg_val = original_expression[arg_idx]
 

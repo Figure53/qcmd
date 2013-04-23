@@ -1,5 +1,5 @@
 # This class contains our logic for parsing
-# S-Expressions. They are turned into a 
+# S-Expressions. They are turned into a
 # native Ruby representation like:
 #   [:def, :something [:lambda, [:a], [:do_something]]]
 class Sexpistol
@@ -26,7 +26,7 @@ class Sexpistol
       end
     end
   end
-  
+
   # Convert nil, true and false into (), #t and #f for compatability
   # with Scheme
   def convert_scheme_literals(data)
@@ -39,7 +39,7 @@ class Sexpistol
       end
      end
   end
-  
+
   # Convert a set of nested arrays back into an S-Expression
   def to_sexp(data)
     data = convert_scheme_literals(data) if(@scheme_compatability)
@@ -47,6 +47,9 @@ class Sexpistol
       mapped = data.map do |item|
         if( item.is_a?(Array))
           to_sexp(item)
+        elsif item.is_a?(String)
+          # preserve string literal double quoting
+          item.inspect
         else
           item.to_s
         end
@@ -56,9 +59,9 @@ class Sexpistol
       data.to_s
     end
   end
-  
+
   private
-  
+
     def recursive_map(data, &block)
       if(data.is_a?(Array))
         return data.map do |x|
@@ -72,5 +75,5 @@ class Sexpistol
         block.call(data)
       end
     end
-  
+
 end

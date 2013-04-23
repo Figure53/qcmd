@@ -32,6 +32,11 @@ describe Qcmd::Parser do
     tokens.should eql([:cue, 10, :name, [:cue, 3, :name]])
   end
 
+  it "should parse nested commands with string literals" do
+    tokens = Qcmd::Parser.parse 'alias cue-rename (cue $1 name "Hello World")'
+    tokens.should eql([:alias, :'cue-rename', [:cue, :'$1', :name, 'Hello World']])
+  end
+
   it "should parse alias commands" do
     tokens = Qcmd::Parser.parse 'alias copy-name (cue 10 name (cue 3 name))'
     tokens.should eql([:alias, :'copy-name', [:cue, 10, :name, [:cue, 3, :name]]])
@@ -55,5 +60,25 @@ describe Qcmd::Parser do
   it 'should parse strings with parens' do
     tokens = Qcmd::Parser.parse %[cue 1 name "this is (not good)"]
     tokens.should eql([:cue, 1, :name, 'this is (not good)'])
+  end
+
+  ## Generating
+
+  describe "generating expressions" do
+    it "should leave string literals intact" do
+      expression = Qcmd::Parser.generate([:cue, :'$1', :name, 'Hello World'])
+      expression.should eql('(cue $1 name "Hello World")')
+    end
+
+    it "should handle nesting" do
+      expression = Qcmd::Parser.generate([:cue, :'$1', :name, [:cue, :'$2', :name]])
+      expression.should eql('(cue $1 name (cue $2 name))')
+    end
+
+    it "should handle escaped double quotes" do
+      expression = Qcmd::Parser.generate([:go, 'word word', 10, -12.3, 'life "is good" yeah'])
+      expression.should eql('(go "word word" 10 -12.3 "life \"is good\" yeah")')
+
+    end
   end
 end
