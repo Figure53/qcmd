@@ -38,22 +38,27 @@ describe Qcmd::Commands do
 
     describe 'machine commands' do
       it 'should not raise errors' do
+        Qcmd.context.machine_connected?.should be_true
         test_log
 
         Qcmd::Commands::MACHINE.each do |machine_command|
           expect {
-            osc_message = OSC::Message.new "/#{ machine_command }"
+            osc_message = OSC::Message.new "/#{ machine_command }", 1
 
             reply = nil
 
+            test_log "[machine_command] sending #{ machine_command } - #{ osc_message.address } #{ osc_message.to_a.inspect }"
+
             # should be able to instantiate all OSC message reponses as QLab replies
             Qcmd.context.qlab.send(osc_message) do |response|
+              # test_log "[machine command] response: #{ response.inspect }"
               reply = Qcmd::QLab::Reply.new(response)
               # test_log "[machine command] #{ reply.address } got #{ reply.to_s }"
             end
 
-            test_log reply.address
             reply.should_not be_nil
+            # test_log reply.address
+
           }.to_not raise_error
         end
       end
@@ -122,6 +127,8 @@ describe Qcmd::Commands do
           Qcmd.context.qlab.send(osc_message) do |response|
             reply = Qcmd::QLab::Reply.new(response)
             @cue  = Qcmd::QLab::Cue.new(reply.data.first['cues'].first)
+
+            test_log "pulling cue from data: #{ reply.data.inspect }"
           end
         end
 
@@ -132,7 +139,11 @@ describe Qcmd::Commands do
 
           Qcmd::Commands::CUE.each do |cue_command|
             expect {
-              osc_message = OSC::Message.new "/workspace/#{workspace.id}/cue/#{ @cue.number }/#{ cue_command }"
+              test_log "using cue #{ @cue } : #{ @cue.data }"
+              cmd = "/workspace/#{workspace.id}/cue/#{ @cue.number }/#{ cue_command }"
+
+              test_log "sending #{ cmd }"
+              osc_message = OSC::Message.new cmd
 
               osc_response = nil
               reply = nil
@@ -146,7 +157,7 @@ describe Qcmd::Commands do
                 test_log reply.address
                 reply.should_not be_nil
               rescue => ex
-                puts "reply access fail '#{ ex.message }' on response #{ osc_response.inspect }"
+                test_log "reply access fail '#{ ex.message }' on response #{ osc_response.inspect }"
                 raise
               end
 

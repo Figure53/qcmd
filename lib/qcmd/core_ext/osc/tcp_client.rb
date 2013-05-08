@@ -52,16 +52,21 @@ module OSC
 
       send_char CHAR_END
 
+      # puts "[TCPClient] sent message: #{ enc_msg.inspect }"
+
       if block_given? || @handler
         messages = response
         if !messages.nil?
           messages.each do |message|
+            # puts "[TCPClient] got message #{ message }"
             if block_given?
               yield message
             else
               @handler.handle message
             end
           end
+        else
+          # puts "[TCPClient] response is nil"
         end
       end
     end

@@ -11,4 +11,9 @@ describe Qcmd::CLI do
     Qcmd::CLI.should_receive :new
     Qcmd::CLI.launch
   end
+
+  describe 'handling input' do
+    it 'should evaluate cue commands' do
+    end
+  end
 end

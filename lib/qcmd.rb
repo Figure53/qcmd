@@ -25,8 +25,10 @@ module Qcmd
   autoload :Network, 'qcmd/network'
   autoload :QLab, 'qcmd/qlab'
   autoload :VERSION, 'qcmd/version'
-  autoload :Action, 'qcmd/action'
   autoload :Aliases, 'qcmd/aliases'
+
+  autoload :Action, 'qcmd/action'
+  autoload :CueAction, 'qcmd/action'
 
   # on launch
 

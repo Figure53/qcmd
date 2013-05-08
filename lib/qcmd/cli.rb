@@ -36,12 +36,9 @@ module Qcmd
             handle_input Qcmd::Parser.parse(options[:command])
             return
           end
-        elsif Qcmd.context.machine.workspaces.size == 1 &&
-              !Qcmd.context.machine.workspaces.first.passcode? &&
-              !Qcmd.context.workspace_connected?
-          if !connect_default_workspace
-            Handler.print_workspace_list
-          end
+        elsif !connect_default_workspace
+          Handler.print_workspace_list
+          # end
         end
       end
 
@@ -385,7 +382,7 @@ module Qcmd
         workspace_command = args[1]
 
         if !Qcmd.context.workspace_connected?
-          handle_failed_workspace_command cli_input
+          handle_failed_workspace_command args
           return
         end
 
@@ -402,7 +399,7 @@ module Qcmd
 
       when 'cues'
         if !Qcmd.context.workspace_connected?
-          handle_failed_workspace_command cli_input
+          handle_failed_workspace_command args
           return
         end
 
@@ -425,7 +422,7 @@ module Qcmd
         # id_field = $1
 
         if !Qcmd.context.workspace_connected?
-          handle_failed_workspace_command cli_input
+          handle_failed_workspace_command args
           return
         end
 
@@ -525,14 +522,17 @@ module Qcmd
         elsif Qcmd.context.cue_connected? && Qcmd::InputCompleter::ReservedCueWords.include?(command)
           # prepend the given command with a cue address
           if Qcmd.context.cue.number.nil? || Qcmd.context.cue.number.size == 0
-            command = "cue_id/#{ Qcmd.context.cue.id }/#{ command }"
+            command_args = [:cue_id, Qcmd.context.cue.id, command]
           else
-            command = "cue/#{ Qcmd.context.cue.number }/#{ command }"
+            command_args = [:cue, Qcmd.context.cue.number, command]
           end
 
-          args = [command].push(*args[1..-1])
+          # add the rest of the given args
+          Qcmd.debug "adding #{args[1..-1].inspect} to #{ command_args.inspect }"
+          command_args.push(*args[1..-1])
 
-          cue_action = Qcmd::CueAction.new(args)
+          Qcmd.debug "creating cue action with #{command_args.inspect}"
+          cue_action = Qcmd::CueAction.new(command_args)
 
           reply = cue_action.evaluate
           handle_simple_reply reply
@@ -568,6 +568,7 @@ module Qcmd
     end
 
     def handle_failed_workspace_command command
+      command = command.join ' '
       print_wrapped(%[The command, "#{ command }" can't be processed yet. you must
                       first connect to a machine and a workspace
                       before issuing other commands.])
@@ -613,7 +614,7 @@ module Qcmd
     end
 
     def fixate_on_cue cue_action
-      # fixate on cue
+      # fixate on the cue which is the subject of the given action
       if Qcmd.context.workspace.has_cues?
         _cue = Qcmd.context.workspace.cues.find {|cue|
           case cue_action.id_field
@@ -649,8 +650,12 @@ module Qcmd
     end
 
     def connect_default_workspace
-      if Qcmd.context.machine.workspaces.size == 1 && !Qcmd.context.machine.workspaces.first.passcode?
+      connectable = Qcmd.context.machine.workspaces.size == 1 &&
+        !Qcmd.context.machine.workspaces.first.passcode? &&
+        !Qcmd.context.workspace_connected?
+      if connectable
         connect_to_workspace_by_index(0, nil)
+
         true
       else
         false
