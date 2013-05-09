@@ -17,12 +17,12 @@ Gem::Specification.new do |gem|
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
   gem.require_paths = ["lib"]
 
-  gem.add_runtime_dependency 'dnssd'
-  gem.add_runtime_dependency 'json'
+  gem.add_runtime_dependency 'dnssd', '= 2.0'
+  gem.add_runtime_dependency 'json', '= 1.7.7'
   gem.add_runtime_dependency 'osc-ruby', '= 1.0.0'
-  gem.add_runtime_dependency 'trollop'
+  gem.add_runtime_dependency 'trollop', '= 2.0'
 
   gem.add_development_dependency "rspec", '~> 2.10.0'
-  gem.add_development_dependency "cucumber"
+  gem.add_development_dependency "cucumber", '= 1.2.1'
   gem.add_development_dependency "aruba"
 end
