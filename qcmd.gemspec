@@ -19,7 +19,7 @@ Gem::Specification.new do |gem|
 
   gem.add_runtime_dependency 'dnssd'
   gem.add_runtime_dependency 'json'
-  gem.add_runtime_dependency 'osc-ruby'
+  gem.add_runtime_dependency 'osc-ruby', '= 1.0.0'
   gem.add_runtime_dependency 'trollop'
 
   gem.add_development_dependency "rspec", '~> 2.10.0'
