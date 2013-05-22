@@ -73,7 +73,7 @@ class SexpistolParser < StringScanner
     elsif scan(/"([^"\\]|\\.)*"/)
       eval(matched)
     # Match a float literal
-    elsif scan(/[\-\+]? [0-9]+ ((e[0-9]+) | (\.[0-9]+(e[0-9]+)?)) (\s|$)/x)
+    elsif scan(/[\-\+]? [0-9]+ ((e[0-9]+) | (\.[0-9]+(e[0-9]+)?))(\)| )(\s|$)/x)
       matched.to_f
     # Match an integer literal
     elsif scan(/[\-\+]?[0-9]+ (\s|$)/x)

@@ -17,8 +17,8 @@ describe Qcmd::Parser do
   end
 
   it "should parse floats" do
-    tokens = Qcmd::Parser.parse '1.1 go "word word" 10 -12.3 1.1.1 10.2'
-    tokens.should eql([1.1, :go, 'word word', 10, -12.3, :'1.1.1', 10.2])
+    tokens = Qcmd::Parser.parse '1.1 go ("word word" 10.2 -12.3 1.1.1 10.2)'
+    tokens.should eql([1.1, :go, ['word word', 10.2, -12.3, :'1.1.1', 10.2]])
   end
 
   it "should parse invalid numbers as symbols" do
