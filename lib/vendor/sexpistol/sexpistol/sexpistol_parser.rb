@@ -76,7 +76,7 @@ class SexpistolParser < StringScanner
     elsif scan(/[\-\+]? [0-9]+ ((e[0-9]+) | (\.[0-9]+(e[0-9]+)?))(\)| )(\s|$)/x)
       matched.to_f
     # Match an integer literal
-    elsif scan(/[\-\+]?[0-9]+ (\s|$)/x)
+    elsif scan(/[\-\+]?[0-9]+(\)| )(\s|$)/x)
       matched.to_i
     # Match a comma (for comma quoting)
     elsif scan(/'/)

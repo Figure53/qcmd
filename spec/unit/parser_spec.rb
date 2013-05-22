@@ -12,8 +12,8 @@ describe Qcmd::Parser do
   end
 
   it "should parse integers" do
-    tokens = Qcmd::Parser.parse 'go "word word" 10'
-    tokens.should eql([:go, 'word word', 10])
+    tokens = Qcmd::Parser.parse 'go "word word" 10 (rate 10)'
+    tokens.should eql([:go, 'word word', 10, [:rate, 10]])
   end
 
   it "should parse floats" do
