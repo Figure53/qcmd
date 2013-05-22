@@ -270,6 +270,16 @@ aliases
 
   See all the aliases.
 
+
+sleep NUMBER
+
+  Pause qcmd execution for NUMBER seconds.
+
+  For example:
+
+    > cue 3 start; sleep 2; stop
+
+  Will start cue number 3, then stop it two seconds later.
 ]
         end
       end

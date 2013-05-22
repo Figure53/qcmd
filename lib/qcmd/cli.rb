@@ -302,6 +302,8 @@ module Qcmd
 
       Qcmd.debug "[CLI handle_input] command: #{ command }; args: #{ args.inspect }"
 
+      # this is where qcmd decides how to handle user input
+
       case command
       when 'exit', 'quit', 'q'
         print 'exiting...'
@@ -493,6 +495,15 @@ module Qcmd
           log(:warning, "The select command should be in the form `select CUE_NUMBER`.")
         end
 
+      # local ruby commands
+      when 'sleep'
+        if args.size != 2
+          log(:warning, "The sleep command expects one argument")
+        elsif !(args[1].is_a?(Fixnum) || args[1].is_a?(Float))
+          log(:warning, "The sleep command expects a number")
+        else
+          sleep args[1].to_f
+        end
       else
         if aliases[command]
           Qcmd.debug "[CLI handle_input] using alias #{ command }"
