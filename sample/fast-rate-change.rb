@@ -22,7 +22,7 @@ max_rate = 2.0
   end
 
   (1..steps).each do |n|
-    c.send(OSC::Message.new("/cue/#{ cue_number }/rate", 2.0 - (n / (steps / max_rate))))
+    c.send(OSC::Message.new("/cue/#{ cue_number }/rate", (max_rate + 0.01) - (n / (steps / max_rate))))
     sleep(sleep_time)
   end
 end
