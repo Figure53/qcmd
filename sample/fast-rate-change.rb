@@ -1,5 +1,7 @@
 # slide the playback rate up and down
+require 'rubygems'
 require 'osc-ruby'
+
 c = OSC::Client.new 'localhost', 53000
 
 # first cue
