@@ -12,9 +12,8 @@ module Qcmd
         # make sure string is wrapped in parens to make the parser happy
         begin
           parser.parse_string "#{ string }"
-        rescue => ex
-          puts "parser FAILED WITH EXCEPTION: #{ ex.message }"
-          raise
+        rescue ParseException => ex
+          puts "Command parser failed with exception: #{ ex.message }"
         end
       end
 

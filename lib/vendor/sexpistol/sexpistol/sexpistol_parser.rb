@@ -1,5 +1,8 @@
 require 'strscan'
 
+class ParseException < Exception
+end
+
 class SexpistolParser < StringScanner
 
   def initialize(string)
@@ -32,9 +35,9 @@ class SexpistolParser < StringScanner
     end
 
     if paren_count > 0
-      raise Exception, "Missing closing parentheses"
+      raise ParseException.new("Missing closing parentheses")
     elsif paren_count < 0
-      raise Exception, "Missing opening parentheses"
+      raise ParseException.new("Missing opening parentheses")
     end
 
     super(string)
@@ -94,7 +97,9 @@ class SexpistolParser < StringScanner
 
   def expression_ender
     # end Fixnum and Float matchers with a non-grouping positive lookahead
-    # assertion that matches a closing paren, whitespace, or string end
+    # assertion that matches a closing paren, whitespace, or string end.  The
+    # positive lookahead (?=...) ensures the string scanner includes the ending
+    # character in next fetch_token call.
     '(?=(?:\)|\s|$))'
   end
 
