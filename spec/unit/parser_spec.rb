@@ -12,13 +12,13 @@ describe Qcmd::Parser do
   end
 
   it "should parse integers" do
-    tokens = Qcmd::Parser.parse 'go "word word" 10 (rate 10)'
-    tokens.should eql([:go, 'word word', 10, [:rate, 10]])
+    tokens = Qcmd::Parser.parse 'go "word word" 10 (rate 10) 1'
+    tokens.should eql([:go, 'word word', 10, [:rate, 10], 1])
   end
 
   it "should parse floats" do
-    tokens = Qcmd::Parser.parse '1.1 go ("word word" 10.2 -12.3 1.1.1 10.2)'
-    tokens.should eql([1.1, :go, ['word word', 10.2, -12.3, :'1.1.1', 10.2]])
+    tokens = Qcmd::Parser.parse '1.1 go ("word word" 10.2 -12.3 1.1.1) 10.2'
+    tokens.should eql([1.1, :go, ['word word', 10.2, -12.3, :'1.1.1'], 10.2])
   end
 
   it "should parse invalid numbers as symbols" do
@@ -28,7 +28,6 @@ describe Qcmd::Parser do
 
   it "should parse nested quotes" do
     tokens = Qcmd::Parser.parse 'go "word word" 10 -12.3 "life \"is good\" yeah"'
-
     tokens.should eql([:go, 'word word', 10, -12.3, 'life "is good" yeah'])
   end
 
@@ -83,7 +82,6 @@ describe Qcmd::Parser do
     it "should handle escaped double quotes" do
       expression = Qcmd::Parser.generate([:go, 'word word', 10, -12.3, 'life "is good" yeah'])
       expression.should eql('(go "word word" 10 -12.3 "life \"is good\" yeah")')
-
     end
   end
 end

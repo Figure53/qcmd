@@ -7,6 +7,7 @@ class SexpistolParser < StringScanner
     in_string_literal = false
     escape_char = false
     paren_count = 0
+
     string.bytes.each do |byte|
       if escape_char
         escape_char = false
@@ -43,19 +44,19 @@ class SexpistolParser < StringScanner
     exp = []
     while true
       case fetch_token
-        when '('
-          exp << parse
-        when ')'
-          break
-        when :"'"
-          case fetch_token
-          when '(' then exp << [:quote].concat([parse])
-          else exp << [:quote, @token]
-          end
-        when String, Fixnum, Float, Symbol
-          exp << @token
-        when nil
-          break
+      when '('
+        exp << parse
+      when ')'
+        break
+      when :"'"
+        case fetch_token
+        when '(' then exp << [:quote].concat([parse])
+        else exp << [:quote, @token]
+        end
+      when String, Fixnum, Float, Symbol
+        exp << @token
+      when nil
+        break
       end
     end
     exp
@@ -73,10 +74,10 @@ class SexpistolParser < StringScanner
     elsif scan(/"([^"\\]|\\.)*"/)
       eval(matched)
     # Match a float literal
-    elsif scan(/[\-\+]? [0-9]+ ((e[0-9]+) | (\.[0-9]+(e[0-9]+)?))(\)| )(\s|$)/x)
+    elsif scan(/[\-\+]? [0-9]+ ((e[0-9]+) | (\.[0-9]+(e[0-9]+)?))#{ expression_ender }/x)
       matched.to_f
     # Match an integer literal
-    elsif scan(/[\-\+]?[0-9]+(\)| )(\s|$)/x)
+    elsif scan(/[\-\+]?[0-9]+#{ expression_ender }/)
       matched.to_i
     # Match a comma (for comma quoting)
     elsif scan(/'/)
@@ -89,6 +90,12 @@ class SexpistolParser < StringScanner
       near = scan %r{.{0,20}}
       raise "Invalid character at position #{pos} near '#{near}'."
     end
+  end
+
+  def expression_ender
+    # end Fixnum and Float matchers with a non-grouping positive lookahead
+    # assertion that matches a closing paren, whitespace, or string end
+    '(?=(?:\)|\s|$))'
   end
 
 end
