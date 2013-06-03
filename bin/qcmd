@@ -11,13 +11,28 @@ opts = Trollop::options do
   version VERSION_STRING
   opt :verbose, 'Use verbose mode', :default => false
   opt :debug, "Show full debug output, don't make changes to workspaces", :default => false
-  opt :machine, "Automatically try to connect to the machine with the given name", :type => :string
-  opt :workspace, "Automatically try to connect to the workspace with the given name", :type => :string
-  opt :workspace_passcode, "Use the given workspace passcode", :type => :integer
-  opt :command, "Execute a single command and exit", :type => :string
+  opt :machine, 'Automatically try to connect to the machine with the given name', :type => :string
+  opt :workspace, 'Automatically try to connect to the workspace with the given name', :type => :string
+  opt :workspace_passcode, 'Use the given workspace passcode', :type => :integer
+  opt :command, 'Execute a single command and exit', :type => :string
+  opt :version_check, 'Check if a new version of qcmd is available and quit', :default => false
 end
 
 Qcmd.log_level = :info
+
+if opts[:version_check]
+  if Qcmd.available_version
+    if Qcmd.installed_version.to_s != Qcmd.available_version.to_s
+      puts "You have version #{ Qcmd.installed_version }, but #{ Qcmd.available_version.to_s } is available."
+      puts "Run `sudo gem update qcmd` to get the most recent version."
+    else
+      puts "You have the current version of qcmd installed."
+      puts VERSION_STRING
+    end
+  end
+
+  exit
+end
 
 if opts[:verbose]
   Qcmd.log_level = :debug
