@@ -86,9 +86,9 @@ module Qcmd
 
     def debug message
       # always write to log
-
       Qcmd::Configuration.log.puts "[%s] %s" % [Time.now.strftime('%T'), message]
 
+      # forward message to log
       log(:debug, message)
     end
 

@@ -29,18 +29,30 @@ if opts[:version_check]
       puts "You have the current version of qcmd installed."
       puts VERSION_STRING
     end
+  else
+    puts "We were unable to reach #{ Qcmd.rubygems_uri } to check the available qcmd version."
   end
+
   exit
-#else
-#  # version check on every command line open. maybe skip this.
-#  Qcmd.while_quiet do
-#    if Qcmd.available_version
-#      if Qcmd.installed_version.to_s != Qcmd.available_version.to_s
-#        puts "A new version of qcmd is available! You have #{ Qcmd.installed_version }, but #{ Qcmd.available_version.to_s } is the most recent."
-#        puts
-#      end
-#    end
-#  end
+else
+  # version check on every command line open
+  Qcmd.while_quiet do
+    if !Qcmd::Configuration.config['skip_version_warning'] && Qcmd.available_version
+      known_available_version = Qcmd::Configuration.config['available_version']
+
+      if Qcmd.installed_version.to_s != Qcmd.available_version.to_s &&
+          (!Qcmd::Configuration.config['version_warning'] || Qcmd.available_version != known_available_version)
+        # use 'puts' to make sure the message is available
+        puts "A new version of qcmd is available! You have #{ Qcmd.installed_version }, but #{ Qcmd.available_version.to_s } is the most recent."
+        puts
+
+        Qcmd::Configuration.update('available_version', Qcmd.available_version)
+        Qcmd::Configuration.update('version_warning', true)
+      end
+    else
+      Qcmd::Configuration.update('skip_version_warning', true)
+    end
+  end
 end
 
 if opts[:verbose]
