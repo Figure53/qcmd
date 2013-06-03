@@ -178,14 +178,23 @@ module Qcmd
       machine = nil
 
       # machine name can be found or IPv4 address is given
-      if Qcmd::Network.find(machine_name)
+
+      if machine_name.nil? || machine_name.empty?
+        machine = nil
+      elsif Qcmd::Network.find(machine_name)
         machine = Qcmd::Network.find(machine_name)
       elsif Qcmd::Network::IPV4_MATCHER  =~ machine_name
         machine = Qcmd::Machine.new(machine_name, machine_name, 53000)
       end
 
       if machine.nil?
-        log(:warning, 'Sorry, that machine could not be found')
+        if machine_name.nil? || machine_name.empty?
+          log(:warning, 'You must include a machine name to connect.')
+        else
+          log(:warning, 'Sorry, that machine could not be found')
+        end
+
+        disconnected_machine_warning
       else
         print "Connecting to machine: #{machine_name}"
         connect_machine machine
@@ -322,10 +331,12 @@ module Qcmd
           connect_to_machine_by_name machine_ident
         end
 
-        load_workspaces
+        if Qcmd.context.machine_connected?
+          load_workspaces
 
-        if !connect_default_workspace
-          Handler.print_workspace_list
+          if !connect_default_workspace
+            Handler.print_workspace_list
+          end
         end
 
       when 'disconnect'
@@ -657,7 +668,9 @@ module Qcmd
     ## QLab commands
 
     def load_workspaces
-      Qcmd.context.machine.workspaces = Qcmd::Action.evaluate('workspaces').map {|ws| QLab::Workspace.new(ws)}
+      if !Qcmd.context.machine.nil?
+        Qcmd.context.machine.workspaces = Qcmd::Action.evaluate('workspaces').map {|ws| QLab::Workspace.new(ws)}
+      end
     end
 
     def connect_default_workspace
