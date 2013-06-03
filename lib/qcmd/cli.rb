@@ -57,7 +57,7 @@ module Qcmd
     end
 
     def aliases
-      @aliases ||= Qcmd::Aliases.defaults.merge(Qcmd::Configuration.config['aliases'])
+      @aliases ||= Qcmd::Aliases.defaults.merge(Qcmd::Configuration.config['aliases'] || {})
     end
 
     def alias_arg_matcher
