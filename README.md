@@ -13,11 +13,11 @@ IT.**
 
 ## Installation
 
-Before installing qcmd, you'll have to install the [Command Line Tools for
+Before installing `qcmd`, you'll have to install the [Command Line Tools for
 Xcode](https://developer.apple.com/downloads). They're free, but you'll need an
 Apple ID to download them.
 
-Once you've done that, you can install qcmd to your machine by running the
+Once you've done that, you can install `qcmd` to your machine by running the
 following command:
 
     $ sudo gem install qcmd
@@ -129,6 +129,35 @@ An example session might look like this:
     13:41 [my-mac-laptop] [Untitled Workspace 1] [2 :) :) :) :) :) :)]
     > exit
     exiting...
+
+
+If you already know the machine you want to connect to, you can use the `-m`
+option to connect immediately from the command line:
+
+    $ qcmd -m "my mac laptop"
+    Connecting to workspace: Untitled Workspace 1
+    Connected to "Untitled Workspace 1"
+    Loaded 1 cue
+    10:15 [my mac laptop] [Untitled Workspace 1]
+    >
+
+
+If there's only one workspace available, `qcmd` will connect to the given machine
+and then try to automatically connect to that workspace. If there's more than
+one workspace, you can list it on the command line as well to connect immediately:
+
+    $ qcmd -m "my mac laptop" -w "very special cues.cues"
+    10:36 [my mac laptop] [very special cues.cues]
+    >
+
+
+Finally, if all you want `qcmd` to do is run a single command and exit, you can
+use the `-c` option from the command line along with the `-m` and `-w` to make
+sure `qcmd` knows where to send the message:
+
+    $ qcmd -m "my mac laptop" -w "very special cues.cues" -c "cue 1 start"
+    ok
+
 
 ## Contributing
 
