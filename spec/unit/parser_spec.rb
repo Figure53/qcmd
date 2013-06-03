@@ -66,6 +66,11 @@ describe Qcmd::Parser do
     tokens.should eql([:cue, 1, :name, 'this is (not good)'])
   end
 
+  it 'should parse multiple commands in a row' do
+    tokens = Qcmd::Parser.parse '(copy-sliders 1 2) (echo "DONE!")'
+    tokens.should eql([[:'copy-sliders', 1, 2], [:echo, "DONE!"]])
+  end
+
   ## Generating
 
   describe "generating expressions" do

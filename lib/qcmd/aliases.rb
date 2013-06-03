@@ -4,9 +4,13 @@ module Qcmd
       @defaults ||= {
         'n' => 'cue $1 name $2',
         # zero-out cue_number
-        'zero-out' => (1..48).map {|n| "(cue $1 sliderLevel #{n} 0)"}.join(' '),
+        'zero-out' => '(log-silent)' +
+                      (1..48).map {|n| "(cue $1 sliderLevel #{n} 0)"}.join(' ') +
+                      '(log-noisy) (echo "set slider levels for cue $1 to all zeros")',
         # copy-sliders from_cue_number to_cue_number
-        'copy-sliders' => (1..48).map {|n| "(cue $2 sliderLevel #{n} (cue $1 sliderLevel #{n} 0))"}.join(' ')
+        'copy-sliders' => '(log-silent)' +
+                          (1..48).map {|n| "(cue $2 sliderLevel #{n} (cue $1 sliderLevel #{n} 0))"}.join(' ') +
+                          '(log-noisy) (echo "copied slider levels from cue $1 to cue $2")',
       }.merge(copy_cue_actions)
     end
 

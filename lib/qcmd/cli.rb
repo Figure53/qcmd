@@ -8,7 +8,7 @@ module Qcmd
     attr_accessor :prompt
 
     def self.launch options={}
-      new options
+      new(options).start
     end
 
     def initialize options={}
@@ -33,8 +33,8 @@ module Qcmd
           end
 
           if options[:command_given]
-            handle_input Qcmd::Parser.parse(options[:command])
-            return
+            split_and_handle options[:command]
+            exit
           end
         elsif !connect_default_workspace
           Handler.print_workspace_list
@@ -45,7 +45,7 @@ module Qcmd
       # add aliases to input completer
       InputCompleter.add_commands aliases.keys
 
-      start
+      self
     end
 
     def machine
@@ -85,7 +85,22 @@ module Qcmd
 
             Qcmd.debug "[CLI replace_args] found $#{ arg_idx }, replacing with #{ arg_val.inspect }"
 
-            arg = arg.to_s.sub("$#{ arg_idx }", arg_val.to_s)
+            if arg == :"$#{ arg_idx }"
+              # pure symbol replace
+              #   alias: [:cue, :$1, :name]
+              #   input: [:cname, 25]
+              #
+              #   result:  :$1 -> 25
+              arg = arg_val
+            else
+              # arg replacement inside string
+              #   alias: [:cue, :$1, :name, "hello $2"]
+              #   input: [:cname, 25, 26]
+              #
+              #   result:  :$1 -> 25
+              #   result:  "hello $2" -> "hello 26"
+              arg = arg.to_s.sub("$#{ arg_idx }", arg_val.to_s)
+            end
           end
 
           arg
@@ -291,13 +306,7 @@ module Qcmd
         Qcmd::History.push(cli_input)
 
         begin
-          if /;/ =~ cli_input
-            cli_input.split(';').each do |sub_input|
-              handle_input Qcmd::Parser.parse(sub_input.strip)
-            end
-          else
-            handle_input Qcmd::Parser.parse(cli_input)
-          end
+          split_and_handle(cli_input)
         rescue => ex
           print "Command parser couldn't handle the last command: #{ ex.message }"
           print ex.backtrace
@@ -305,9 +314,28 @@ module Qcmd
       end
     end
 
+    def split_and_handle cli_input
+      if /;/ =~ cli_input
+        cli_input.split(';').each do |sub_input|
+          handle_input Qcmd::Parser.parse(sub_input.strip)
+        end
+      else
+        handle_input Qcmd::Parser.parse(cli_input)
+      end
+    end
+
     # the actual command line interface interactor
     def handle_input args
-      command = args[0].to_s
+      if args.all? {|a| a.is_a?(Array)}
+        # commands all the way down, just get out of the way
+        args.each {|arg|
+          Qcmd.debug "calling recursive handle_input on #{ arg.inspect }"
+          handle_input(arg)
+        }
+        return
+      else
+        command = args[0].to_s
+      end
 
       Qcmd.debug "[CLI handle_input] command: #{ command }; args: #{ args.inspect }"
 
@@ -486,7 +514,6 @@ module Qcmd
         end
 
       when 'select'
-
         if args.size == 2
           reply = send_workspace_command "#{ args[0] }/#{ args[1] }"
 
@@ -506,7 +533,7 @@ module Qcmd
           log(:warning, "The select command should be in the form `select CUE_NUMBER`.")
         end
 
-      # local ruby commands
+      # local commands
       when 'sleep'
         if args.size != 2
           log(:warning, "The sleep command expects one argument")
@@ -515,6 +542,29 @@ module Qcmd
         else
           sleep args[1].to_f
         end
+
+      when 'log-silent'
+        @previous_log_level = Qcmd.log_level
+        Qcmd.log_level = :none
+
+      when 'log-noisy'
+        Qcmd.log_level = @previous_log_level || :info
+
+      when 'log-debug'
+        Qcmd.log_level = :debug
+        print "set log level to :debug"
+
+      when 'log-info'
+        Qcmd.log_level = :info
+        print "set log level to :info"
+
+      when 'echo'
+        if args[1].is_a?(Array)
+          print Action.evaluate(args[1])
+        else
+          print args[1]
+        end
+
       else
         if aliases[command]
           Qcmd.debug "[CLI handle_input] using alias #{ command }"
@@ -524,15 +574,16 @@ module Qcmd
           # alias expansion failed, go back to CLI
           return if new_expression.nil?
 
-          Qcmd.debug "[CLI handle_input] expanded to: #{ new_expression.inspect }"
-
-          # recurse!
+          # unpack nested command. e.g., [[:cue, 1, :name]] -> [:cue, 1, :name]
           if new_expression.size == 1 && new_expression[0].is_a?(Array)
             while new_expression.size == 1 && new_expression[0].is_a?(Array)
               new_expression = new_expression[0]
             end
           end
 
+          Qcmd.debug "[CLI handle_input] expanded to: #{ new_expression.inspect }"
+
+          # recurse!
           if new_expression.all? {|exp| exp.is_a?(Array)}
             new_expression.each {|nested_expression|
               handle_input nested_expression

@@ -280,6 +280,17 @@ sleep NUMBER
     > cue 3 start; sleep 2; stop
 
   Will start cue number 3, then stop it two seconds later.
+
+log-silent, log-noisy
+
+  Turn off output, turn it back on, respectively.
+
+log-debug, log-info
+
+  Set output "level" to debug or info, respectively. Debug will tell you
+  everything qcmd is doing, in great detail. It's really just for development
+  purposes.
+
 ]
         end
       end

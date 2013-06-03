@@ -20,10 +20,9 @@ describe Qcmd::Action do
     Qcmd.context.qlab.send(OSC::Message.new('/alwaysReply', 1))
   end
 
-  it "should call `parse` when initialized" do
-    Qcmd::Action.any_instance.stub(:parse) { true }
-    Qcmd::Action.any_instance.should_receive(:parse)
-    Qcmd::Action.new [:cue, 10, :name]
+  it "should parse when initialized" do
+    action = Qcmd::Action.new 'cue 10 name'
+    action.code.should eql([:cue, 10, :name])
   end
 
   it 'should send a command when evaluated' do
