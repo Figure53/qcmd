@@ -30,8 +30,17 @@ if opts[:version_check]
       puts VERSION_STRING
     end
   end
-
   exit
+#else
+#  # version check on every command line open. maybe skip this.
+#  Qcmd.while_quiet do
+#    if Qcmd.available_version
+#      if Qcmd.installed_version.to_s != Qcmd.available_version.to_s
+#        puts "A new version of qcmd is available! You have #{ Qcmd.installed_version }, but #{ Qcmd.available_version.to_s } is the most recent."
+#        puts
+#      end
+#    end
+#  end
 end
 
 if opts[:verbose]
