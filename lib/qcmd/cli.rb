@@ -156,7 +156,7 @@ module Qcmd
 
       # tell QLab to always reply to messages
       response = Qcmd::Action.evaluate('/alwaysReply 1')
-      if response.nil? || response.empty?
+      if response.nil? || response.to_s.empty?
         log(:error, %[Failed to connect to QLab machine "#{ machine.name }"])
       elsif response.status == 'ok'
         print %[Connected to machine "#{ machine.name }"]
@@ -179,16 +179,16 @@ module Qcmd
 
       # machine name can be found or IPv4 address is given
 
-      if machine_name.nil? || machine_name.empty?
+      if machine_name.nil? || machine_name.to_s.empty?
         machine = nil
       elsif Qcmd::Network.find(machine_name)
         machine = Qcmd::Network.find(machine_name)
-      elsif Qcmd::Network::IPV4_MATCHER  =~ machine_name
+      elsif Qcmd::Network::IPV4_MATCHER  =~ machine_name.to_s
         machine = Qcmd::Machine.new(machine_name, machine_name, 53000)
       end
 
       if machine.nil?
-        if machine_name.nil? || machine_name.empty?
+        if machine_name.nil? || machine_name.to_s.empty?
           log(:warning, 'You must include a machine name to connect.')
         else
           log(:warning, 'Sorry, that machine could not be found')
