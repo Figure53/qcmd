@@ -41,6 +41,9 @@ module Qcmd
                       end
 
                       JSON.load(File.open(config_file))
+                    rescue
+                      Qcmd.log(:error, "Failed to load configuration, make sure #{ config_file } is valid JSON.\n\n")
+                      raise
                     end
       end
 
