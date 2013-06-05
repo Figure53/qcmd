@@ -3,7 +3,7 @@ module Qcmd
     def self.defaults
       @defaults ||= {
         'n' => 'cue $1 name $2',
-        # zero-out cue_number
+        # zero-out sliders for cue_number
         'zero-out' => '(log-silent)' +
                       (1..48).map {|n| "(cue $1 sliderLevel #{n} 0)"}.join(' ') +
                       '(log-noisy) (echo "set slider levels for cue $1 to all zeros")',
@@ -11,6 +11,8 @@ module Qcmd
         'copy-sliders' => '(log-silent)' +
                           (1..48).map {|n| "(cue $2 sliderLevel #{n} (cue $1 sliderLevel #{n}))"}.join(' ') +
                           '(log-noisy) (echo "copied slider levels from cue $1 to cue $2")',
+        'boost' => '(cue $1 sliderLevel $2 ++$3)',
+        'drop'  => '(cue $1 sliderLevel $2 --$3)'
       }.merge(copy_cue_actions)
     end
 

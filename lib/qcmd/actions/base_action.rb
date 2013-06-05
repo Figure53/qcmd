@@ -1,6 +1,7 @@
 module Qcmd
   class BaseAction
     attr_reader :code
+    attr_accessor :modification
 
     # initialize and evaluate in one shot
     def self.evaluate action_input
@@ -24,7 +25,7 @@ module Qcmd
         expression = Qcmd::Parser.parse(expression)
       end
 
-      @code = parse(expression)
+      parse(expression)
     end
 
     def evaluate
@@ -32,7 +33,7 @@ module Qcmd
         nil
       else
         @code = code.map do |token|
-          if token.is_a?(Action)
+          if token.is_a?(BaseAction)
             Qcmd.debug "[Action evaluate] evaluating nested action: #{ token.code.inspect }"
             token.evaluate
           else
@@ -42,17 +43,22 @@ module Qcmd
 
         Qcmd.debug "[Action evaluate] evaluating code: #{ code.inspect }"
 
-        send_message
+        response = send_message
+        if modification
+          modification.call(response)
+        else
+          response
+        end
       end
     end
 
+    # convert nested arrays into new actions
     def parse(expression)
-      # unwrap nested arrays
       if expression.size == 1 && expression[0].is_a?(Array)
         expression = expression[0]
       end
 
-      expression.map do |token|
+      @code = expression.map do |token|
         if token.is_a?(Array)
           if [:cue, :cue_id].include?(token.first)
             Qcmd.debug "nested cue action detected in #{ expression.inspect }"
@@ -66,6 +72,31 @@ module Qcmd
       end.tap {|exp|
         Qcmd.debug "[Action parse] returning: #{ exp.inspect }"
       }
+
+      # if there's a trailing modifier command, replace it with an action that will
+      # return a value that can be modified.
+      if tm = trailing_modifier
+        Qcmd.debug "[Action parse] found trailing modifier: #{ tm.inspect }"
+
+        mod_type = tm[0]
+        mod_value = tm[2].to_f
+
+        # clone this action without the final arg
+        new_action = self.class.new(@code[0, @code.size - 1])
+
+        Qcmd.debug "[Action parse] creating modification proc: value.send(:#{ mod_type }, #{ mod_value })"
+        new_action.modification = Proc.new {|value|
+          Qcmd.debug "[Action parse] executing modification proc: #{ value }.send(:#{ mod_type }, #{ mod_value })"
+          if value.respond_to?(mod_type)
+            value.send mod_type, mod_value
+          else
+            Qcmd.log :warning, "The command `#{ new_action.code.join(' ') }` returned a value of type #{ value.class.to_s } which does not understand the #{ mod_type } modifier."
+            value
+          end
+        }
+
+        code[code.size - 1] = new_action
+      end
     end
 
     # the default command builder
@@ -97,14 +128,47 @@ module Qcmd
 
     private
 
+    # is the last argument to the osc command a modifier?
+    # returns nil or [modifier, matcher, matched_value]
+    def trailing_modifier
+      if osc_arguments && !osc_arguments.last.is_a?(BaseAction)
+        modifier = modifiers.find {|(_, matcher)|
+          matcher =~ osc_arguments.last.to_s
+        }
+
+        if modifier
+          modifier + [$1]
+        else
+          nil
+        end
+      else
+        nil
+      end
+    end
+
+    def number_matcher
+      # matches 1.9, .9, or 1
+      "(?: [0-9]+ \. [0-9]+ | \. [0-9]+ | [0-9]+ )"
+    end
+
+    def modifiers
+      [
+        [:+, /^\+\+(#{ number_matcher })/x],
+        [:-, /--(#{ number_matcher })/x],
+        [:/, /\/\/(#{ number_matcher })/x],
+        [:*, /\*\*(#{ number_matcher })/x]
+      ]
+    end
+
+    def modifier_matchers
+      modifiers.map(&:last)
+    end
+
     def send_message
       responses = []
 
       Qcmd.debug "[Action send_message] send #{ osc_message.encode }"
       Qcmd.context.qlab.send(osc_message) do |response|
-        # puts "response to: #{ osc_message.inspect }"
-        # puts response.inspect
-
         responses << QLab::Reply.new(response)
       end
 

@@ -26,6 +26,11 @@ describe Qcmd::Parser do
     tokens.should eql([:cue, :'1.11.0'])
   end
 
+  it 'should parse modifiers as symbols' do
+    tokens = Qcmd::Parser.parse 'cue number ++1 --1'
+    tokens.should eql([:cue, :number, :'++1', :'--1'])
+  end
+
   it "should parse nested quotes" do
     tokens = Qcmd::Parser.parse 'go "word word" 10 -12.3 "life \"is good\" yeah"'
     tokens.should eql([:go, 'word word', 10, -12.3, 'life "is good" yeah'])

@@ -10,6 +10,12 @@ class DeadHandler
   end
 end
 
+def stubbed_modified_action modifier
+  action = Qcmd::CueAction.new ''
+  action.stub(:code) { [:cue, 1, :sliderLevel, 0, modifier] }
+  action
+end
+
 describe Qcmd::Action do
   before do
     Qcmd.context = Qcmd::Context.new
@@ -77,6 +83,67 @@ describe Qcmd::Action do
     it 'should nest actions' do
       action = Qcmd::CueAction.new 'cue 1 name (cue 2 name)'
       action.code[3].should be_an_instance_of(Qcmd::CueAction)
+    end
+
+    describe 'modifiers' do
+      describe 'positive' do
+        it 'should match int' do
+          action = stubbed_modified_action :'++1'
+          found = action.send(:trailing_modifier)
+
+          found.should_not be_nil
+          found.first.should eql(:+)
+          found.last.should eql('1')
+        end
+
+        it 'should match float' do
+          action = stubbed_modified_action :'++1.2'
+          found = action.send(:trailing_modifier)
+
+          found.should_not be_nil
+          found.first.should eql(:+)
+          found.last.should eql('1.2')
+        end
+
+        it 'should match bare float' do
+          action = stubbed_modified_action :'++.2'
+          found = action.send(:trailing_modifier)
+
+          found.should_not be_nil
+          found.first.should eql(:+)
+          found.last.should eql('.2')
+        end
+
+      end
+
+      describe 'negative' do
+        it 'should match int' do
+          action = stubbed_modified_action :'--1'
+          found = action.send(:trailing_modifier)
+
+          found.should_not be_nil
+          found.first.should eql(:-)
+          found.last.should eql('1')
+        end
+
+        it 'should match float' do
+          action = stubbed_modified_action :'--1.2'
+          found = action.send(:trailing_modifier)
+
+          found.should_not be_nil
+          found.first.should eql(:-)
+          found.last.should eql('1.2')
+        end
+
+        it 'should match bare float' do
+          action = stubbed_modified_action :'--.2'
+          found = action.send(:trailing_modifier)
+
+          found.should_not be_nil
+          found.first.should eql(:-)
+          found.last.should eql('.2')
+        end
+      end
     end
   end
 

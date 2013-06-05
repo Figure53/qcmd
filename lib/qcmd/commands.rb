@@ -281,15 +281,37 @@ sleep NUMBER
 
   Will start cue number 3, then stop it two seconds later.
 
+
 log-silent, log-noisy
 
   Turn off output, turn it back on, respectively.
+
 
 log-debug, log-info
 
   Set output "level" to debug or info, respectively. Debug will tell you
   everything qcmd is doing, in great detail. It's really just for development
   purposes.
+
+
+--, ++, //, **
+
+  These are modifiers can be used with a number on cue specific commands to
+  drop, raise, divide, or multiply the given value by the given amount,
+  respectively. For example, instead of using:
+
+    cue 1 sliderLevel 1 0
+
+  to set the value of volume slider 1 on cue 1 to 0 absolute, you can use:
+
+    cue 1 sliderLevel 1 ++0.2
+
+  to raise the current value of slider 1 on cue 1 by 0.2. To lower it by 0.2
+  you'd use "--0.2". The same for ** and //.
+
+  This is handy if you know you want to adjust the value of the cue setting by
+  a small amount but you don't know what the value is at the moment.
+
 
 ]
         end

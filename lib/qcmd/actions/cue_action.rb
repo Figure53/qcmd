@@ -1,6 +1,11 @@
 module Qcmd
-  class CueAction < Action
-    # cue commands work differently
+  class CueAction < BaseAction
+    # cue commands should be in the form:
+    #
+    #   [$id_field, $identifier, $command[, $arguments]]
+    #
+    # where arguments are optional.
+
     def command
       code[2]
     end
