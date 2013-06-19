@@ -50,7 +50,7 @@ module Qcmd
     def connect_to_qlab handler=nil
       # get an open connection with the default handler
       handler ||= Qcmd::Handler
-      self.qlab = OSC::TCPClient.new(machine.address, machine.port, handler)
+      self.qlab = OSC::TCP::Client.new(machine.address, machine.port, handler)
     end
   end
 end

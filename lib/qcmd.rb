@@ -11,8 +11,7 @@ require 'qcmd/commands'
 require 'qcmd/input_completer'
 require 'qcmd/core_ext/array'
 require 'qcmd/core_ext/string'
-require 'qcmd/core_ext/osc/message'
-require 'qcmd/core_ext/osc/tcp_client'
+require 'qcmd/core_ext/osc'
 
 module Qcmd
   autoload :Configuration, 'qcmd/configuration'

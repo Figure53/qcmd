@@ -32,13 +32,13 @@ end
 
 browsers = []
 
-#browsers.push(DNSSD.browse('_qlab._udp.') do |b|
-#  do_browse_on_service(b)
-#end)
-
-browsers.push(DNSSD.browse('_qlab._tcp.') do |b|
+browsers.push(DNSSD.browse('_qlab._udp.') do |b|
   do_browse_on_service(b)
 end)
+
+# browsers.push(DNSSD.browse('_qlab._tcp.') do |b|
+#   do_browse_on_service(b)
+# end)
 
 trap 'INT' do
   browsers.map(&:stop);

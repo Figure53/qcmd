@@ -5,7 +5,7 @@ require 'json'
 
 # try it out
 
-qlab = OSC::TCPClient.new 'localhost', 53000
+qlab = OSC::TCP::Client.new 'localhost', 53000
 
 def receive(rcv)
   if rcv
