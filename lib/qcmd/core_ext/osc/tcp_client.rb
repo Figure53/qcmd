@@ -26,13 +26,12 @@ module OSC
       def send msg
         @sending_socket.send msg
 
-        # puts "[TCP::Client] sent message: #{ enc_msg.inspect }"
 
         if block_given? || @handler
           messages = response
           if !messages.nil?
             messages.each do |message|
-              # puts "[TCPClient] got message #{ message }"
+              # puts "[TCP::Client] got message #{ message }"
               if block_given?
                 yield message
               else

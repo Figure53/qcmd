@@ -28,6 +28,8 @@ module OSC
         send_char CHAR_END
 
         flush
+
+        # puts "[TCP::SendingSocket] sent message: #{ enc_msg.inspect }"
       end
 
       private
