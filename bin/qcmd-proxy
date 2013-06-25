@@ -1,0 +1,98 @@
+#!/usr/bin/env ruby
+
+#
+# After starting qcmd-proxy, you should be able to to connect to "OSC QLab
+# Proxy Server" from QLab Remote for iPad and see all the messages flying back
+# and forth in your terminal.
+#
+# Tested on Ruby 1.9.3 and Ruby 1.8.7 (OS X 10.8 system ruby)
+#
+
+require 'rubygems'
+require 'osc-ruby'
+require 'dnssd'
+require 'qcmd'
+
+forwarding_port = 52000
+
+# 52001 for testing on localhost, 53001 for real-world use.
+udp_response_port = 53001
+
+# These are
+qlab_listening_port = 53000
+qlab_response_port  = 53001
+
+# we won't know which IP Adress is making the UDP request until a request has been received.
+requesting_ip_address = nil
+
+dnssd_thread = Thread.new do
+  # name, type, domain, port
+  service = DNSSD.register 'OSC QLab Proxy Server', '_qlab._udp', 'local.', forwarding_port
+  service = DNSSD.register 'OSC QLab Proxy Server', '_qlab._tcp', 'local.', forwarding_port
+end
+
+# TCP & UDP servers that talk directly to QLab
+outbound_qlab_tcp_connection = OSC::TCP::Client.new 'localhost', qlab_listening_port
+outbound_qlab_udp_connection = OSC::Client.new 'localhost', qlab_listening_port
+
+# Forwarding UDP Server
+#
+# This server gets requests from a remote control app and forwards them to QLab
+forwarding_udp_server = OSC::Server.new(forwarding_port)
+forwarding_udp_server.add_method(/.*/) do |message|
+  puts "[forwarding_udp_server] receiving message #{ message.address }"
+  puts "[forwarding_udp_server] with args #{ message.to_a.inspect }"
+
+  # get client app's ip address, we'll use it to forward traffic from QLab back
+  # to the remote control app.
+  requesting_ip_address = message.ip_address.sub(/\.\.\./, '')
+
+  # immediately send message to QLab
+  puts "[forwarding_udp_server] sending #{ message.encode } to QLab"
+  outbound_qlab_udp_connection.send message
+end
+
+# Receive real responses from QLab and forward them back to original requestor
+# on port 53001, just like the real QLab. Slight problem, we don't know who
+# sent the request that inspired this response, so we guess it's the requestor
+# who made a request most recently.
+inbound_qlab_udp_connection = OSC::Server.new qlab_response_port
+inbound_qlab_udp_connection.add_method(/.*/) do |qlab_response_message|
+  puts "[inbound_qlab_udp_connection] receiving message from QLab #{ qlab_response_message }"
+  if requesting_ip_address
+    puts "[inbound_qlab_udp_connection] sending qlab response (#{ qlab_response_message.address }) to requestor #{ requesting_ip_address }"
+    puts "[inbound_qlab_udp_connection] with args #{ qlab_response_message.to_a.inspect }"
+    @requesting_client ||= OSC::Client.new(requesting_ip_address, udp_response_port)
+    @requesting_client.send qlab_response_message
+  end
+end
+
+## OSC::TCPServer gets requests and forwards them to QLab
+forwarding_tcp_server = OSC::TCP::Server.new(forwarding_port)
+forwarding_tcp_server.add_method(/.*/) do |message|
+  puts "[forwarding_tcp_server] received #{ message.address }"
+  puts "[forwarding_tcp_server] contacting qlab"
+
+  outbound_qlab_udp_connection.send(message) do |qlab_response_message|
+    puts "[forwarding_tcp_server] got response message #{ qlab_response_message }"
+    if qlab_response_message
+      puts "[forwarding_tcp_server] sending qlab response (#{ qlab_response_message.address }) to requestor"
+      message.responder.send(qlab_response_message)
+    end
+  end
+end
+
+puts "starting forwarding UDP server on port #{ forwarding_port }"
+udp_forwarding_thread = Thread.new do
+  forwarding_udp_server.run
+end
+
+puts "starting inbound UDP server on port #{ qlab_response_port }"
+udp_inbound_thread = Thread.new do
+  inbound_qlab_udp_connection.run
+end
+
+puts "starting forwarding TCP server on port #{ forwarding_port }"
+forwarding_tcp_server.run
+
+
