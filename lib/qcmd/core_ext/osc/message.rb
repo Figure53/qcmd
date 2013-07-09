@@ -12,5 +12,12 @@ module OSC
     def responder=(val)
       @responder = val
     end
+
+    def debug
+      types = to_a.map(&:class).map(&:to_s).join(', ')
+      args  = to_a
+
+      "#{ip_address}:#{ip_port} -- #{address} -- [#{ types }] -- #{ args.inspect }"
+    end
   end
 end

@@ -28,12 +28,14 @@ def do_browse_on_service(b)
     row :target, r
     puts '*' * 40
   end
+
 end
 
 browsers = []
 
 browsers.push(DNSSD.browse('_qlab._udp.') do |b|
   do_browse_on_service(b)
+  sleep 2
 end)
 
 # browsers.push(DNSSD.browse('_qlab._tcp.') do |b|

@@ -5,7 +5,7 @@ require 'trollop'
 
 # require 'profile'
 
-VERSION_STRING =  "qcmd #{ Qcmd::VERSION } (c) 2012 Figure 53, Baltimore, MD."
+VERSION_STRING =  "qcmd #{ Qcmd::VERSION } (c) 2013 Figure 53, Baltimore, MD."
 
 opts = Trollop::options do
   version VERSION_STRING
