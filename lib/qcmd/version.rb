@@ -1,5 +1,5 @@
 module Qcmd
-  VERSION = "0.1.16.pre2"
+  VERSION = "0.1.16.pre3"
 
   class << self
     def installed_version
