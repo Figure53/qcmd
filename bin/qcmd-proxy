@@ -1,24 +1,32 @@
 #!/usr/bin/env ruby
 
-#
-# After starting qcmd-proxy, you should be able to to connect to "OSC QLab
-# Proxy Server" from QLab Remote for iPad and see all the messages flying back
-# and forth in your terminal. Due to the way QLab responds via blind UDP, you
-# may have to manually connect to the proxy server.
-#
-# qcmd-proxy can also be used to debug your own OSC apps. Simply start QLab,
-# then start qcmd-proxy from the command line and then connect your app to port
-# 52000 of your machine instead of 53000.
-#
-# Running your OSC app/script/tool/toy on localhost will cause an infinite
-# looping scenario where qcmd-proxy receives a response from QLab and forwards
-# it to itself. To avoid this, qcmd-proxy will not forward UDP messages to apps
-# running on 127.0.0.1, 0.0.0.0, or "localhost".
-#
-# NOTE: if you're running a very active OSC app, you could be generating more
-# data than qcmd can spit to the console easily, you should redirect output to
-# a logfile if you're going to be sending more than, say, 8 commands a second.
-#
+help_message = <<-EOS
+
+After starting qcmd-proxy, you should be able to to connect to "OSC QLab
+Proxy Server" from QLab Remote for iPad and see all the messages flying back
+and forth in your terminal. Due to the way QLab responds via blind UDP, you
+may have to manually connect to the proxy server.
+
+qcmd-proxy can also be used to debug your own OSC apps. Simply start QLab,
+then start qcmd-proxy from the command line and then connect your app to port
+52000 of your machine instead of 53000.
+
+Running your OSC app/script/tool/toy on localhost will cause an infinite
+looping scenario where qcmd-proxy receives a response from QLab and forwards
+it to itself. To avoid this, qcmd-proxy will not forward UDP messages to apps
+running on 127.0.0.1, 0.0.0.0, or "localhost".
+
+NOTE: if you're running a very active OSC app, you could be generating more
+data than qcmd can spit to the console easily, you should redirect output to
+a logfile if you're going to be sending more than, say, 8 commands a second.
+
+Usage:
+
+    qcmd-proxy [options]
+
+where [options] are:
+
+EOS
 
 require 'qcmd'
 require 'dnssd'
@@ -28,6 +36,7 @@ VERSION_STRING =  "qcmd-proxy #{ Qcmd::VERSION } (c) 2013 Figure 53, Baltimore, 
 
 opts = Trollop::options do
   version VERSION_STRING
+  banner help_message
   opt :receiving_port, 'The port qcmd-proxy will receive requests from client apps on.', :default => 52000
   opt :qlab_listening_port, 'The port QLab is listening on.', :default => 53000
   opt :qlab_response_port, 'The port QLab will respond on.', :default => 53001
