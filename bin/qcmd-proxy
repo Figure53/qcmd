@@ -10,12 +10,14 @@
 # then start qcmd-proxy from the command line and then connect your app to port
 # 52000 of your machine instead of 53000.
 #
-# NOTE: if you're running a very active OSC app, you could be generating more
-# data than qcmd can spit to the console.
+# Running your OSC app/script/tool/toy on localhost will cause an infinite
+# looping scenario where qcmd-proxy receives a response from QLab and forwards
+# it to itself. To avoid this, qcmd-proxy will not forward UDP messages to apps
+# running on 127.0.0.1, 0.0.0.0, or "localhost".
 #
-# WARNING: running your OSC app/script/tool/toy on localhost could cause an
-# infinite looping scenario where qcmd-proxy receives a response from QLab and
-# forwards it to itself.
+# NOTE: if you're running a very active OSC app, you could be generating more
+# data than qcmd can spit to the console easily, you should redirect output to
+# a logfile if you're going to be sending more than, say, 8 commands a second.
 #
 
 require 'qcmd'
