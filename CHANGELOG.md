@@ -1,3 +1,14 @@
+### 0.1.9 to 0.1.16
+
+* replace command parser with updated version of [Sexpistol](https://github.com/aarongough/sexpistol).
+* add "sleep" command. 1f047b45eb33e0d65563fae0eb1eb73e4fb61ee9
+* add log related commands (`log-silent`, `log-noisy`, `log-debug`, `log-info`,
+  and `echo`) for use in alias commands. 16b10d1c824c31a32716e5bbeb08adf4858ba4c6
+* multiple commands can be given when launching qcmd with the -c option 16b10d1c824c31a32716e5bbeb08adf4858ba4c6
+* add ++, --, \*\*, and // command modifiers df4eca08865225927c32fe73d1dd5038807209a6
+* add a TCP based OSC server to support qcmd-proxy 436f7384ba0fee9dc2bbf25df19e7b78c4b60fb2
+* create qcmd-proxy to allow for easier debugging of OSC apps that want to talk to QLab
+
 ### 0.1.8 to 0.1.9
 
 * add help documentation for the "alias" command
