@@ -3,7 +3,19 @@
 #
 # After starting qcmd-proxy, you should be able to to connect to "OSC QLab
 # Proxy Server" from QLab Remote for iPad and see all the messages flying back
-# and forth in your terminal.
+# and forth in your terminal. Due to the way QLab responds via blind UDP, you
+# may have to manually connect to the proxy server.
+#
+# qcmd-proxy can also be used to debug your own OSC apps. Simply start QLab,
+# then start qcmd-proxy from the command line and then connect your app to port
+# 52000 of your machine instead of 53000.
+#
+# NOTE: if you're running a very active OSC app, you could be generating more
+# data than qcmd can spit to the console.
+#
+# WARNING: running your OSC app/script/tool/toy on localhost could cause an
+# infinite looping scenario where qcmd-proxy receives a response from QLab and
+# forwards it to itself.
 #
 
 require 'qcmd'
@@ -30,6 +42,8 @@ qlab_listening_port = opts[:qlab_listening_port]
 qlab_response_port  = opts[:qlab_response_port]
 qlab_host_name      = opts[:qlab_host_name]
 
+# qcmd-proxy registers itself on the local network as an application supporting
+# the QLab OSC protocol.
 dnssd_thread = Thread.new do
   # name, type, domain, port
   service = DNSSD.register 'OSC QLab Proxy Server', '_qlab._udp', 'local.', receiving_port
@@ -73,6 +87,11 @@ forwarding_udp_server.add_method(/.*/) do |message|
   end
 end
 
+# try to avoid forwarding messages to qcmd-proxy
+def is_loopback_address?(ip_address)
+  /^(127\.0\.0\.1|0\.0\.0\.0|localhost)$/ =~ ip_address
+end
+
 # Receive real responses from QLab and forward them back to original requestor
 # on port 53001, just like the real QLab. Slight problem, we don't know who
 # sent the request that inspired this response, so we guess it's the requestor
@@ -81,10 +100,11 @@ inbound_qlab_udp_connection = OSC::Server.new qlab_response_port
 inbound_qlab_udp_connection.add_method(/.*/) do |qlab_response_message|
   if requesting_ip_address
     Qcmd.print "[udp from QLab for #{ requesting_ip_address }:#{ udp_response_port }]  #{ qlab_response_message.debug }"
-    # Qcmd.print "[udp from QLab] on client #{ requesting_clients[requesting_ip_address].inspect }"
 
-    requesting_clients[requesting_ip_address] = OSC::Client.new(requesting_ip_address, udp_response_port)
-    requesting_clients[requesting_ip_address].send(qlab_response_message)
+    if !is_loopback_address?(requesting_ip_address.to_s)
+      requesting_clients[requesting_ip_address] = OSC::Client.new(requesting_ip_address, udp_response_port)
+      requesting_clients[requesting_ip_address].send(qlab_response_message)
+    end
   else
     Qcmd.print "Cannot forward UDP from QLab! No requesting_ip_address available"
   end
