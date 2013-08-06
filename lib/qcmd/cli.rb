@@ -197,9 +197,11 @@ module Qcmd
       if machine_name.nil? || machine_name.to_s.empty?
         machine = nil
       elsif Qcmd::Network.find(machine_name)
+        log(:debug, "[connect_to_machine_by_name] Searching for machine by name: #{ machine_name.to_s }")
         machine = Qcmd::Network.find(machine_name)
       elsif Qcmd::Network::IPV4_MATCHER  =~ machine_name.to_s
-        machine = Qcmd::Machine.new(machine_name, machine_name, 53000)
+        log(:debug, "[connect_to_machine_by_name] Connecting to machine by IP ADDRESS: #{ machine_name.to_s }")
+        machine = Qcmd::Machine.new(machine_name, machine_name.to_s, 53000)
       end
 
       if machine.nil?
