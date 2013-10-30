@@ -139,7 +139,7 @@ describe Qcmd::Commands do
 
           Qcmd::Commands::CUE.each do |cue_command|
             expect {
-              test_log "using cue #{ @cue } : #{ @cue.data }"
+              test_log "using cue #{ @cue } : #{ @cue.data.inspect }"
               cmd = "/workspace/#{workspace.id}/cue/#{ @cue.number }/#{ cue_command }"
 
               test_log "sending #{ cmd }"
