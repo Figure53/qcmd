@@ -417,7 +417,9 @@ module Qcmd
         if !Qcmd.context.machine_connected?
           disconnected_machine_warning
         else
-          machine.workspaces = Qcmd::Action.evaluate(args).map {|ws| QLab::Workspace.new(ws)}
+          machine.workspaces = Qcmd::Action.evaluate(args).map {|ws|
+            QLab::Workspace.new(ws)
+          }
           Handler.print_workspace_list
         end
 

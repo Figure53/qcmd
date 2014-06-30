@@ -25,21 +25,16 @@ module OSC
       # send an OSC::Message
       def send msg
         @sending_socket.send msg
-
-
         if block_given? || @handler
           messages = response
           if !messages.nil?
             messages.each do |message|
-              # puts "[TCP::Client] got message #{ message }"
               if block_given?
                 yield message
               else
                 @handler.handle message
               end
             end
-          else
-            # puts "[TCP::Client] response is nil"
           end
         end
       end
@@ -47,6 +42,7 @@ module OSC
       def response
         if received_messages = receive_raw
           received_messages.map do |message|
+            Qcmd.debug "[TCP::Client] message #{ message.inspect }"
             OSCPacket.messages_from_network(message)
           end.flatten
         else
@@ -80,8 +76,7 @@ module OSC
                 # add SLIP encoded message to list
                 messages << buffer.join
 
-                # reset state and keep reading from the port until there's
-                # nothing left
+                # reset state and keep reading from the port until there's nothing left
                 buffer.clear
                 received = 0
                 failed = false
@@ -109,8 +104,8 @@ module OSC
             end
 
             # wait one second to see if the socket might become readable (and a
-            # response forthcoming). normal usage is send + wait for response,
-            # we have to give QLab a reasonable amount of time in which to respond.
+            # response forthcoming). normal usage is send + receive response, but
+            # if app doesn't intend to respond we should eventually ignore it.
 
             IO.select([@socket], [], [], 1)
             failed = true
