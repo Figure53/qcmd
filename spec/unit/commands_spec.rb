@@ -38,7 +38,7 @@ describe Qcmd::Commands do
 
     describe 'machine commands' do
       it 'should not raise errors' do
-        Qcmd.context.machine_connected?.should be_true
+        Qcmd.context.machine_connected?.should be true
         test_log
 
         Qcmd::Commands::MACHINE.each do |machine_command|
