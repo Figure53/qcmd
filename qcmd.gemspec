@@ -19,10 +19,12 @@ Gem::Specification.new do |gem|
 
   gem.add_runtime_dependency 'dnssd', '= 2.0'
   gem.add_runtime_dependency 'json', '= 1.7.7'
-  gem.add_runtime_dependency 'osc-ruby', '= 1.0.0'
+  gem.add_runtime_dependency 'osc-ruby', '= 1.1.0'
   gem.add_runtime_dependency 'trollop', '= 2.0'
 
   gem.add_development_dependency "rspec", '~> 2.10.0'
   gem.add_development_dependency "cucumber", '= 1.2.1'
   gem.add_development_dependency "aruba"
+
+  gem.required_ruby_version = '>= 1.9'
 end
